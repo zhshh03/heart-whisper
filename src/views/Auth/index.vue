@@ -7,7 +7,7 @@
   <router-view></router-view>
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
 div {
   width: 200px;
   height: 220px;

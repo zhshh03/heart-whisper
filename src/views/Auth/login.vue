@@ -6,8 +6,8 @@ const router = useRouter()
 <template>
   <div>登录页</div>
   <a href="" @click="router.push('/front')">去用户页</a>
-  <a href="" @click="router.push('/backend')">去后台管理页</a>
-  <a href="" @click="router.push('/register')">去注册</a>
+  <a href="" @click="router.push('/back')">去后台管理页</a>
+  <a href="" @click="router.push('/auth/register')">去注册</a>
 </template>
 
 <style scoped>
