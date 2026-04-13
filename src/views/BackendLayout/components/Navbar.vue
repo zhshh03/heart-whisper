@@ -1,19 +1,27 @@
 <script setup>
 import { Expand } from '@element-plus/icons-vue'
+import { useRouter } from 'vue-router'
+import { useAdminStore } from '@/stores/admin'
 
+const adminStore = useAdminStore()
+
+const router = useRouter()
 const handleCommand = (command) => {
   if (command === 'logout') {
-    console.log('退出登录')
+    router.push('/auth/login')
   }else {
     console.log('个人中心')
   }
+}
+const handleExpand = () => {
+  adminStore.toggleCollapse()
 }
 </script>
 
 <template>
     <div class="navbar">
         <div class="flex-box">
-            <el-button :icon="Expand" />
+            <el-button @click="handleExpand" :icon="Expand" />
             <p class="title">导航栏</p>
         </div>
         <div class="flex-box">

@@ -1,13 +1,16 @@
 <script setup>
 import Sidebar from './components/Sidebar.vue';
 import Navbar from './components/Navbar.vue';
+import { useAdminStore } from '@/stores/admin';
+
+const adminStore = useAdminStore()
 
 </script>
 
 <template>
    <div class="backend-layout">
     <el-container class="main-container">
-      <el-aside width="264px">
+      <el-aside :width='adminStore.isCollapse ? "64px" : "264px"'>
         <Sidebar></Sidebar>
       </el-aside>
       <el-container>
