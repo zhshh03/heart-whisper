@@ -6,8 +6,8 @@ import Navbar from './components/Navbar.vue';
 
 <template>
    <div class="backend-layout">
-    <el-container>
-      <el-aside width="200px">
+    <el-container class="main-container">
+      <el-aside width="264px">
         <Sidebar></Sidebar>
       </el-aside>
       <el-container>
@@ -26,5 +26,8 @@ import Navbar from './components/Navbar.vue';
 .backend-layout{
   height: 100vh;
 
+  .main-container{
+    height: 100%;
+  }
 }
 </style>
