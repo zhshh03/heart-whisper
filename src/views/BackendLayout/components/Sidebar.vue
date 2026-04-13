@@ -10,6 +10,11 @@ const router = useRouter()
 const iconUrl = new URL('@/assets/images/机器人.png',import.meta.url).href
 const backArr = router.options.routes[2].children
 
+const handleClick = (item) => {
+  adminStore.currentTitle = item.meta.title
+  router.push(item.path)
+}
+
 </script>
 <template>
      <el-menu
@@ -29,7 +34,7 @@ const backArr = router.options.routes[2].children
             v-for="item in backArr" 
             :key="item.path" 
             :index="item.path" 
-            @click="router.push(item.path)">
+            @click="handleClick(item)">
           <el-icon><component :is="item.meta.icon"/></el-icon>
           <span>{{ item.meta.title }}</span>
         </el-menu-item>

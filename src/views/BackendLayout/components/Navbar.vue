@@ -22,7 +22,7 @@ const handleExpand = () => {
     <div class="navbar">
         <div class="flex-box">
             <el-button @click="handleExpand" :icon="Expand" />
-            <p class="title">导航栏</p>
+            <p class="title">{{ adminStore.currentTitle }}</p>
         </div>
         <div class="flex-box">
             <el-avatar
