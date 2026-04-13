@@ -41,7 +41,7 @@ const handleCommand = (command) => {
 <style lang="scss" scoped>
 .navbar {
   display: flex;
-  height: 64px;
+  height: 100%;
   align-items: center;
   padding: 0 25px 0 15px;
   background: #fff;

@@ -1,5 +1,16 @@
+<script setup>
+import PageHeader from './components/PageHearder.vue';
+
+const title = '知识文章'
+</script>
+
+
 <template>
   <div>
-    <h3>知识文章内容</h3>
+    <PageHeader :title="title">
+      <template #button>
+        <el-button  type="primary">新增</el-button>
+      </template>
+    </PageHeader>
   </div>
 </template>

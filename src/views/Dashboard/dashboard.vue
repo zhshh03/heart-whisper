@@ -1,5 +1,13 @@
+<script setup>
+import PageHeader from './components/PageHearder.vue';
+
+const title = '数据分析'
+</script>
+
+
 <template>
   <div>
-    <h3>数据分析内容</h3>
+    <PageHeader :title="title">
+    </PageHeader>
   </div>
 </template>

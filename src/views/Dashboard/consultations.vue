@@ -1,5 +1,13 @@
+<script setup>
+import PageHeader from './components/PageHearder.vue';
+
+const title = '咨询记录'
+</script>
+
+
 <template>
   <div>
-    <h3>咨询记录内容</h3>
+    <PageHeader :title="title">
+    </PageHeader>
   </div>
 </template>

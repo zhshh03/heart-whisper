@@ -34,11 +34,13 @@ const backArr = router.options.routes[2].children
 <style lang="scss" scoped>
 .menu-style{
   height: 100%;
+  background-color: #fff;
 
-.logo {
+  .logo {
   display: flex;
   align-items: center;
-  padding: 20px 16px;
+  height: 74px;
+  padding: 0 16px;
   border-bottom: 2px solid #eee;
 
   img {
