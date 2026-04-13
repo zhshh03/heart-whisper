@@ -1,6 +1,6 @@
 <script setup>
 const props = defineProps({
-  title:{
+  title: {
     type: String,
     required: true
   }
@@ -18,15 +18,15 @@ const props = defineProps({
 </template>
 
 <style lang="scss" scoped>
-.page-header{
+.page-header {
+  margin-bottom: 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 
-  .title{
+  .title {
     font-size: 24px;
     color: #2d3748;
   }
 }
-
 </style>

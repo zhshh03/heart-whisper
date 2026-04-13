@@ -1,8 +1,8 @@
-import { defineStore } from "pinia";
-import { ref } from "vue";
+import { defineStore } from 'pinia'
+import { ref } from 'vue'
 
-export const useAdminStore = defineStore("admin",() => {
-  const currentTitle = ref(null)
+export const useAdminStore = defineStore('admin', () => {
+  const currentTitle = ref('数据分析')
   const isCollapse = ref(false)
   const toggleCollapse = () => {
     isCollapse.value = !isCollapse.value
@@ -10,6 +10,6 @@ export const useAdminStore = defineStore("admin",() => {
   return {
     currentTitle,
     isCollapse,
-    toggleCollapse
+    toggleCollapse,
   }
-});
+})
