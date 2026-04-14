@@ -42,6 +42,7 @@ const url = new URL('@/assets/images/robot-fill.png', import.meta.url).href
   display: flex;
   align-items: center;
   justify-content: center;
+  background-color: #fff;
 }
 
 .title {
