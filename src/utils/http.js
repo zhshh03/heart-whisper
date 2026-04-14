@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import 'element-plus/es/components/message/style/css'
 import { useAdminInfoStore } from '@/stores/Admin/adminInfo'
 
 const instance = axios.create({
@@ -29,6 +30,11 @@ instance.interceptors.response.use(
   function (response) {
     // 2xx 范围内的状态码都会触发该函数。
     // 对响应数据做点什么
+    if (response.data.code !== '200') {
+      ElMessage.error(response.data.message || '请求失败')
+      return Promise.reject(new Error(response.data.message || '请求失败'))
+    }
+
     return response.data
   },
   function (error) {
