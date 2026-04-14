@@ -3,10 +3,10 @@ import { defineProps, ref, defineEmits, computed } from 'vue'
 
 //定义事件（将表单数据提交给父组件）
 const emit = defineEmits(['search'])
-//绑定表单
+//绑定表单用来重重
 const ruleFormRef = ref(null)
 
-//表单格式（内容）
+//接收表单格式数据（内容）
 const props = defineProps({
   formItem: {
     type: Array,
@@ -14,7 +14,7 @@ const props = defineProps({
   }
 })
 
-//表单数据
+//双向绑定的表单数据
 const formData = ref({})
 
 //查询
@@ -29,6 +29,7 @@ const handleReset = (el) => {
 }
 //给表单项添加col属性
 const formItemAttrs = computed(() => {
+  //就地修改，就地返回
   props.formItem.forEach(item => {
     item.col = { xs: 24, sm: 12, md: 8, lg: 6, xl: 6 }
   })
@@ -59,10 +60,8 @@ const formItemAttrs = computed(() => {
 
     </el-row>
 
-    <el-row>
-      <el-button type="primary" @click="handleSearch">查询</el-button>
-      <el-button @click="handleReset(ruleFormRef)">重置</el-button>
-    </el-row>
+    <el-button type="primary" @click="handleSearch">查询</el-button>
+    <el-button @click="handleReset(ruleFormRef)">重置</el-button>
 
   </el-form>
 </template>
