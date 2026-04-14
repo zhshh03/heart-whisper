@@ -1,49 +1,50 @@
 <script setup>
-import { Expand } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
-import { useAdminStore } from '@/stores/admin'
+import { useAdminLayoutStore } from '@/stores/Admin/adminLayout'
+import { useAdminInfoStore } from '@/stores/Admin/adminInfo'
 
-const adminStore = useAdminStore()
+
+const adminLayoutStore = useAdminLayoutStore()
+const adminInfoStore = useAdminInfoStore()
 
 const router = useRouter()
 const handleCommand = (command) => {
   if (command === 'logout') {
+    adminInfoStore.clearAdminInfo()
     router.push('/auth/login')
-  }else {
+  } else {
     console.log('个人中心')
   }
 }
 const handleExpand = () => {
-  adminStore.toggleCollapse()
+  adminLayoutStore.toggleCollapse()
 }
 </script>
 
 <template>
-    <div class="navbar">
-        <div class="flex-box">
-            <el-button @click="handleExpand" :icon="Expand" />
-            <p class="title">{{ adminStore.currentTitle }}</p>
-        </div>
-        <div class="flex-box">
-            <el-avatar
-        src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"
-      />
-        <el-dropdown @command="handleCommand">
-            <span class="el-dropdown-link">
-                admin
-            <el-icon class="el-icon--right">
-                <arrow-down />
-            </el-icon>
-            </span>
-            <template #dropdown>
-                <el-dropdown-menu>
-                    <el-dropdown-item command="enter">个人中心</el-dropdown-item>
-                    <el-dropdown-item command="logout">退出登录</el-dropdown-item>
-                </el-dropdown-menu>
-            </template>
-        </el-dropdown>
-        </div>
+  <div class="navbar">
+    <div class="flex-box">
+      <el-button @click="handleExpand" icon="Expand" />
+      <p class="title">{{ adminLayoutStore.currentTitle }}</p>
     </div>
+    <div class="flex-box">
+      <el-avatar src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png" />
+      <el-dropdown @command="handleCommand">
+        <span class="el-dropdown-link">
+          admin
+          <el-icon class="el-icon--right">
+            <arrow-down />
+          </el-icon>
+        </span>
+        <template #dropdown>
+          <el-dropdown-menu>
+            <el-dropdown-item command="enter">个人中心</el-dropdown-item>
+            <el-dropdown-item command="logout">退出登录</el-dropdown-item>
+          </el-dropdown-menu>
+        </template>
+      </el-dropdown>
+    </div>
+  </div>
 </template>
 
 <style lang="scss" scoped>
@@ -57,7 +58,7 @@ const handleExpand = () => {
   box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
   border-bottom: 1px solid #eee;
 
-  .flex-box{
+  .flex-box {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -75,6 +76,6 @@ const handleExpand = () => {
     color: var(--el-color-primary);
     display: flex;
     align-items: center;
-}
+  }
 }
 </style>

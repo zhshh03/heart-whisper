@@ -6,7 +6,7 @@ const url = new URL('@/assets/images/robot-fill.png', import.meta.url).href
 <template>
   <div class="layout">
     <div class="right-sidebar">
-      <h2 class="title">心里AI助手</h2>
+      <h2 class="title">AI心理助手</h2>
       <p class="desc">每个深夜，每个焦虑的时刻，我们都在这里。不必独自承受，让心与心的连接温暖您的每一天</p>
       <div class="img-box">
         <el-image :src="url" style="width: 90px; height: 90px;"></el-image>

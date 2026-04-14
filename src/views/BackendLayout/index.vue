@@ -1,16 +1,16 @@
 <script setup>
 import Sidebar from './components/Sidebar.vue';
 import Navbar from './components/Navbar.vue';
-import { useAdminStore } from '@/stores/admin';
+import { useAdminLayoutStore } from '@/stores/Admin/adminLayout';
 
-const adminStore = useAdminStore()
+const adminLayoutStore = useAdminLayoutStore()
 
 </script>
 
 <template>
-   <div class="backend-layout">
+  <div class="backend-layout">
     <el-container class="main-container">
-      <el-aside :width='adminStore.isCollapse ? "64px" : "264px"'>
+      <el-aside :width='adminLayoutStore.isCollapse ? "64px" : "264px"'>
         <Sidebar></Sidebar>
       </el-aside>
       <el-container>
@@ -26,13 +26,13 @@ const adminStore = useAdminStore()
 </template>
 
 <style lang="scss" scoped>
-.backend-layout{
+.backend-layout {
   height: 100vh;
 
-  .main-container{
+  .main-container {
     height: 100%;
 
-    .el-header{
+    .el-header {
       height: 74px !important
     }
 

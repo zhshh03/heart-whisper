@@ -1,8 +1,11 @@
 <script setup>
+import { loginAPI } from '@/apis/admin';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router'
+import { useAdminInfoStore } from '@/stores/Admin/adminInfo';
 
 const router = useRouter()
+const adminInfoStore = useAdminInfoStore()
 
 const formData = ref({
   username: '',
@@ -16,16 +19,16 @@ const rules = ref({
     { required: true, message: '密码不能为空', trigger: 'blur' }
   ]
 })
-// "router.push('/back')"
 const ruleFormRef = ref(null)
 
 const handleLogin = (formEl) => {
   if (!formEl) return
-  formEl.validate(async (valid, fields) => {
+  formEl.validate(async (valid) => {
     if (valid) {
-      // await goLogin(formData.value)
-    } else {
-      console.log('error submit!', fields)
+      const res = await loginAPI(formData.value)
+      adminInfoStore.setToken(res.data.token)
+      adminInfoStore.setAdminInfo(res.data.userInfo)
+      router.push('/back')
     }
   })
 }
