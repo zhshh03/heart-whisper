@@ -8,10 +8,10 @@ const title = '知识文章'
 const formItem = [
   { comp: 'input', prop: 'title', label: '文章标题', placeholder: '请输入文章标题' },
   {
-    comp: 'select', prop: 'category', label: '分类', placeholder: '选择分类'
+    comp: 'select', prop: 'categoryId', label: '分类', placeholder: '选择分类'
   },
   {
-    comp: 'select', prop: 'state', label: '状态', placeholder: '选择状态', options:
+    comp: 'select', prop: 'status', label: '状态', placeholder: '选择状态', options:
       [
         {
           label: '草稿',
@@ -63,7 +63,6 @@ const handleSearch = async (formData) => {
     ...pagination.value
   })
   tableData.value = data.data.records
-  console.log(tableData)
 }
 
 onMounted(() => {
