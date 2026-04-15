@@ -74,6 +74,23 @@ const handleChange = (page) => {
 }
 const dialogVisible = ref(false)
 
+const editArticleList = ref({})
+const editArticle = (row) => {
+  // console.log(row)
+  editArticleList.value = row
+  dialogVisible.value = true
+}
+
+const addArticle = () => {
+  editArticleList.value = {}
+  dialogVisible.value = true
+}
+
+const handleClose = () => {
+  editArticleList.value = {}
+  dialogVisible.value = false
+}
+
 onMounted(() => {
   defaultSearch()
   handleSearch()
@@ -85,7 +102,7 @@ onMounted(() => {
   <div>
     <PageHeader :title="title">
       <template #button>
-        <el-button type="primary" @click="dialogVisible = true">新增</el-button>
+        <el-button type="primary" @click="addArticle">新增</el-button>
       </template>
     </PageHeader>
     <CommonForm :formItem="formItem" @search="handleSearch"></CommonForm>
@@ -118,7 +135,7 @@ onMounted(() => {
       <el-table-column label="操作" width="240" fixed="right">
         <template #default="scope">
           <div style="display: flex; align-items: center">
-            <el-button text type="primary">编辑</el-button>
+            <el-button text type="primary" @click="editArticle(scope.row)">编辑</el-button>
             <el-button v-if="scope.row.status === 0 || scope.row.status === 2" text type="success">发布</el-button>
             <el-button v-if="scope.row.status === 1" text type="warning">下线</el-button>
             <el-button text type="danger">删除</el-button>
@@ -128,6 +145,7 @@ onMounted(() => {
     </el-table>
     <el-pagination background style="margin-top: 25px;" layout="prev, pager, next" :total="total"
       :page-size="pagination.size" @current-change="handleChange" />
-    <ArticleDialog v-model:modelValue="dialogVisible" :categories="categories" @success="handleSearch"></ArticleDialog>
+    <ArticleDialog v-model:modelValue="dialogVisible" :editArticleList="editArticleList" :categories="categories"
+      @success="handleSearch" @close="handleClose"></ArticleDialog>
   </div>
 </template>

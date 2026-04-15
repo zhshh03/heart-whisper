@@ -1,10 +1,10 @@
 <script setup>
 import { ElMessage } from 'element-plus'
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, watch } from 'vue'
 import { updatFile } from '@/apis/admin'
 import { baseFileUrl } from '@/config'
 import RichTextEditor from '@/views/Dashboard/components/RichTextEditor.vue';
-import { addArticleAPI } from '@/apis/admin';
+import { addArticleAPI, getArticleDetailAPI } from '@/apis/admin';
 
 const modelValue = defineModel({
   type: Boolean,
@@ -15,17 +15,25 @@ const props = defineProps({
   categories: {
     type: Array,
     default: () => []
+  },
+  editArticleList: {
+    type: Object,
+    default: () => ({})
   }
 })
 
-const emit = defineEmits(['success'])
+const emit = defineEmits(['success'], ['close'])
 
 const commonTags = ['情绪管理', '焦虑', '抑郁', '压力', '睡眠', '冥想', '正念', '放松', '心理健康', '自我成长', '人际关系', '工作压力', '学习方法', '生活技巧']
 
 const handleClose = () => {
   ruleFormRef.value.resetFields()
+  ruleForm.value.summary = ''
+  ruleForm.value.coverImage = ''
+  imgUrl.value = ''
+  businessId.value = ''
   ruleForm.value.tags = ''
-  modelValue.value = false
+  emit('close')
 }
 
 const ruleFormRef = ref()
@@ -69,10 +77,11 @@ const beforeUpload = (file) => {
   return true
 }
 
+const businessId = ref('')
 const handleUploadRequest = async ({ file }) => {
-  const businessId = crypto.randomUUID()
+  businessId.value = crypto.randomUUID()
 
-  const res = await updatFile(file, { businessId: businessId })
+  const res = await updatFile(file, { businessId: businessId.value })
   imgUrl.value = baseFileUrl + res.data.filePath
   ruleForm.value.coverImage = res.data.filePath
 
@@ -107,14 +116,32 @@ const handleSubmit = () => {
       return
     }
   })
-
 }
 
+const handleCL = () => {
+  emit('close')
+  ruleFormRef.value.resetFields()
+  ruleForm.value.summary = ''
+  ruleForm.value.coverImage = ''
+  imgUrl.value = ''
+  businessId.value = ''
+  ruleForm.value.tags = ''
+}
+
+
+watch(() => props.editArticleList, async (newVal) => {
+  if (newVal.id) {
+    const res = await getArticleDetailAPI(newVal.id)
+    Object.assign(ruleForm.value, res.data)
+    businessId.value = newVal.id
+    imgUrl.value = baseFileUrl + res.coverImage
+  }
+})
 
 </script>
 
 <template>
-  <el-dialog v-model="modelValue" @close="handleClose" title="新增" width="50%">
+  <el-dialog v-model="modelValue" @close="handleClose" :title="props.editArticleList.id ? '编辑文章' : '新增文章'" width="50%">
     <el-form ref="ruleFormRef" style="max-width: 750px" :model="ruleForm" :rules="rules" label-width="auto">
       <el-form-item label="文章标题" prop="title">
         <el-input v-model="ruleForm.title" clearable maxlength="200" show-word-limit placeholder="请输入文章标题" />
@@ -155,10 +182,10 @@ const handleSubmit = () => {
     </el-form>
     <template #footer>
       <div class="dialog-footer">
-        <el-button @click="() => { modelValue = false, ruleFormRef.value.resetFields(), ruleForm.value.tags = '' }">取消
+        <el-button @click="handleCL">取消
         </el-button>
         <el-button type="primary" @click="handleSubmit">
-          创建文章
+          {{ props.editArticleList.id ? '修改文章' : '创建文章' }}
         </el-button>
       </div>
     </template>

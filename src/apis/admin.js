@@ -44,3 +44,17 @@ export const addArticleAPI = (data) => {
     data,
   })
 }
+
+export const getArticleDetailAPI = (id) => {
+  return request({
+    url: `/knowledge/article/${id}`,
+  })
+}
+
+export const updateArticleAPI = (id, data) => {
+  return request({
+    url: `/knowledge/article/${id}`,
+    method: 'put',
+    data,
+  })
+}
