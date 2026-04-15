@@ -85,7 +85,7 @@ onMounted(() => {
   <div>
     <PageHeader :title="title">
       <template #button>
-        <el-button plain type="primary" @click="dialogVisible = true">新增</el-button>
+        <el-button type="primary" @click="dialogVisible = true">新增</el-button>
       </template>
     </PageHeader>
     <CommonForm :formItem="formItem" @search="handleSearch"></CommonForm>
