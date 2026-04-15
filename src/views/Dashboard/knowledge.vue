@@ -3,6 +3,7 @@ import PageHeader from './components/PageHearder.vue';
 import CommonForm from '@/components/CommonForm.vue';
 import { getCategory, getArticleListAPI } from '@/apis/admin'
 import { onMounted, ref } from 'vue';
+import ArticleDialog from './components/ArticleDialog.vue';
 
 const title = '知识文章'
 const formItem = [
@@ -47,13 +48,13 @@ const defaultSearch = async () => {
   })
   formItem[1].options = categories.value
 }
-
+//分页数据
 const pagination = ref({
   size: 8,
   currentPage: 1,
   authorName: ''
 })
-
+//表格数据及总条数
 const tableData = ref([])
 const total = ref()
 
@@ -66,11 +67,12 @@ const handleSearch = async (formData) => {
   tableData.value = data.data.records
   total.value = data.data.total
 }
-
+//分页改变
 const handleChange = (page) => {
   pagination.value.currentPage = page
   handleSearch()
 }
+const dialogVisible = ref(false)
 
 onMounted(() => {
   defaultSearch()
@@ -83,11 +85,13 @@ onMounted(() => {
   <div>
     <PageHeader :title="title">
       <template #button>
-        <el-button type="primary">新增</el-button>
+        <el-button plain type="primary" @click="dialogVisible = true">新增</el-button>
       </template>
     </PageHeader>
     <CommonForm :formItem="formItem" @search="handleSearch"></CommonForm>
-    <el-table :header-row-style="() => ({ backgroundColor: '#f5f7fa', color: '#303133', fontWeight: '600', fontSize: '14px', height: '45px' })" :data="tableData" style="width: 100%; margin-top: 25px;">
+    <el-table
+      :header-row-style="() => ({ backgroundColor: '#f5f7fa', color: '#303133', fontWeight: '600', fontSize: '14px', height: '45px' })"
+      :data="tableData" style="width: 100%; margin-top: 25px;">
       <el-table-column label="文章标题" width="400" fixed="left">
         <template #default="scope">
           <div style="display: flex; align-items: center">
@@ -123,6 +127,7 @@ onMounted(() => {
       </el-table-column>
     </el-table>
     <el-pagination background style="margin-top: 25px;" layout="prev, pager, next" :total="total"
-      :page-size="pagination.size" @change="handleChange" />
+      :page-size="pagination.size" @current-change="handleChange" />
+    <ArticleDialog v-model:modelValue="dialogVisible" :categories="categories" @success="handleSearch"></ArticleDialog>
   </div>
 </template>

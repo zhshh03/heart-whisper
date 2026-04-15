@@ -20,3 +20,27 @@ export const getArticleListAPI = (params) => {
     params,
   })
 }
+
+export const updatFile = (file, businessInfo) => {
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('businessType', 'ARTICLE')
+  formData.append('businessId', businessInfo.businessId)
+  formData.append('businessField', 'cover')
+  return request({
+    url: '/file/upload',
+    method: 'post',
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  })
+}
+
+export const addArticleAPI = (data) => {
+  return request({
+    url: '/knowledge/article',
+    method: 'post',
+    data,
+  })
+}
