@@ -49,12 +49,13 @@ const defaultSearch = async () => {
 }
 
 const pagination = ref({
-  size: '10',
-  currentPage: '1',
+  size: 8,
+  currentPage: 1,
   authorName: ''
 })
 
 const tableData = ref([])
+const total = ref()
 
 //查询
 const handleSearch = async (formData) => {
@@ -63,6 +64,12 @@ const handleSearch = async (formData) => {
     ...pagination.value
   })
   tableData.value = data.data.records
+  total.value = data.data.total
+}
+
+const handleChange = (page) => {
+  pagination.value.currentPage = page
+  handleSearch()
 }
 
 onMounted(() => {
@@ -80,7 +87,7 @@ onMounted(() => {
       </template>
     </PageHeader>
     <CommonForm :formItem="formItem" @search="handleSearch"></CommonForm>
-    <el-table :data="tableData" style="width: 100%; margin-top: 25px;">
+    <el-table :header-row-style="() => ({ backgroundColor: '#f5f7fa', color: '#303133', fontWeight: '600', fontSize: '14px', height: '45px' })" :data="tableData" style="width: 100%; margin-top: 25px;">
       <el-table-column label="文章标题" width="400" fixed="left">
         <template #default="scope">
           <div style="display: flex; align-items: center">
@@ -115,5 +122,7 @@ onMounted(() => {
         </template>
       </el-table-column>
     </el-table>
+    <el-pagination background style="margin-top: 25px;" layout="prev, pager, next" :total="total"
+      :page-size="pagination.size" @change="handleChange" />
   </div>
 </template>
