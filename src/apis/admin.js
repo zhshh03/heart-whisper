@@ -65,3 +65,11 @@ export const deleteArticleAPI = (id) => {
     method: 'delete',
   })
 }
+
+export const updataArticleStatusAPI = (id, data) => {
+  return request({
+    url: `/knowledge/article/${id}/status`,
+    method: 'put',
+    data,
+  })
+}

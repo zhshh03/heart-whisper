@@ -1,7 +1,7 @@
 <script setup>
 import PageHeader from './components/PageHearder.vue';
 import CommonForm from '@/components/CommonForm.vue';
-import { getCategory, getArticleListAPI, deleteArticleAPI } from '@/apis/admin'
+import { getCategory, getArticleListAPI, deleteArticleAPI, updataArticleStatusAPI } from '@/apis/admin'
 import { onMounted, ref } from 'vue';
 import ArticleDialog from './components/ArticleDialog.vue';
 import { ElMessage } from 'element-plus'
@@ -97,6 +97,23 @@ const handleClose = () => {
   dialogVisible.value = false
 }
 
+const updataPublic = async (row) => {
+  await updataArticleStatusAPI(row.id, { status: 1 })
+  handleSearch()
+  ElMessage({
+    type: 'success',
+    message: '发布成功！',
+  })
+}
+const updataOffline = async (row) => {
+  await updataArticleStatusAPI(row.id, { status: 2 })
+  handleSearch()
+  ElMessage({
+    type: 'success',
+    message: '下线成功！',
+  })
+}
+
 const deleteArticle = async (id) => {
   await deleteArticleAPI(id)
   ElMessage.success('删除成功')
@@ -148,8 +165,10 @@ onMounted(() => {
         <template #default="scope">
           <div style="display: flex; align-items: center">
             <el-button text type="primary" @click="editArticle(scope.row)">编辑</el-button>
-            <el-button v-if="scope.row.status === 0 || scope.row.status === 2" text type="success">发布</el-button>
-            <el-button v-if="scope.row.status === 1" text type="warning">下线</el-button>
+            <el-button @click="updataPublic(scope.row)" v-if="scope.row.status === 0 || scope.row.status === 2" text
+              type="success">发布</el-button>
+            <el-button @click="updataOffline(scope.row)" v-if="scope.row.status === 1" text
+              type="warning">下线</el-button>
             <el-button text type="danger" @click="deleteArticle(scope.row.id)">删除</el-button>
           </div>
         </template>
@@ -161,3 +180,5 @@ onMounted(() => {
       @success="handleSearch" @close="handleClose"></ArticleDialog>
   </div>
 </template>
+
+<style lang="scss" scoped></style>
