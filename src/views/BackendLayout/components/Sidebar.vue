@@ -1,5 +1,5 @@
 <script setup>
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { useAdminLayoutStore } from '@/stores/Admin/adminLayout'
 import { computed } from 'vue';
 
@@ -7,17 +7,17 @@ const adminLayoutStore = useAdminLayoutStore()
 const isCollapse = computed(() => adminLayoutStore.isCollapse)
 
 const router = useRouter()
+const route = useRoute()
 const iconUrl = new URL('@/assets/images/机器人.png', import.meta.url).href
 const backArr = router.options.routes[2].children
 
 const handleClick = (item) => {
-  adminLayoutStore.currentTitle = item.meta.title
   router.push(item.path)
 }
 
 </script>
 <template>
-  <el-menu default-active="2" :collapse="isCollapse" :collapse-transition="false" class="menu-style">
+  <el-menu :default-active="route.path" :collapse="isCollapse" :collapse-transition="false" class="menu-style">
     <div :class="['logo', { collapsed: isCollapse }]">
       <img :src="iconUrl" alt="">
       <div v-show="!isCollapse" class="logo-text">
