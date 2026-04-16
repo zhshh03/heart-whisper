@@ -142,8 +142,6 @@ watch(() => props.editArticleList, async (newVal) => {
     const res = await getArticleDetailAPI(newVal.id)
     Object.assign(ruleForm.value, res.data)
     ruleForm.value.tags = ruleForm.value.tags.split(',')
-    console.log(ruleForm);
-
     businessId.value = newVal.id
     imgUrl.value = baseFileUrl + res.data.coverImage
   }

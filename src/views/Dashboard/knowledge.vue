@@ -58,10 +58,15 @@ const pagination = ref({
 const tableData = ref([])
 const total = ref()
 
+const searchParams = ref({})
 //查询
 const handleSearch = async (formData) => {
+  if (formData) {
+    searchParams.value = { ...formData }
+    pagination.value.currentPage = 1
+  }
   const data = await getArticleListAPI({
-    ...formData,
+    ...searchParams.value,
     ...pagination.value
   })
   tableData.value = data.data.records
