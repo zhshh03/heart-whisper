@@ -1,7 +1,7 @@
 <script setup>
 import PageHeader from './components/PageHearder.vue';
 import CommonForm from '@/components/CommonForm.vue';
-import { getCategory, getArticleListAPI, deleteArticleAPI, updataArticleStatusAPI } from '@/apis/admin'
+import { getCategory, getArticleListAPI, deleteArticleAPI, updataArticleStatusAPI } from '@/apis/adminKnowledage'
 import { onMounted, ref } from 'vue';
 import ArticleDialog from './components/ArticleDialog.vue';
 import { ElMessage } from 'element-plus'

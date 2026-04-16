@@ -1,10 +1,10 @@
 <script setup>
 import { ElMessage } from 'element-plus'
 import { ref, nextTick, watch } from 'vue'
-import { updataFile } from '@/apis/admin'
+import { updataFile } from '@/apis/adminKnowledage'
 import { baseFileUrl } from '@/config'
 import RichTextEditor from '@/views/Dashboard/components/RichTextEditor.vue';
-import { addArticleAPI, getArticleDetailAPI, updateArticleAPI } from '@/apis/admin';
+import { addArticleAPI, getArticleDetailAPI, updateArticleAPI } from '@/apis/adminKnowledage';
 
 const modelValue = defineModel({
   type: Boolean,

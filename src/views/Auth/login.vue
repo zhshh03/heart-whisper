@@ -1,5 +1,5 @@
 <script setup>
-import { loginAPI } from '@/apis/admin';
+import { loginAPI } from '@/apis/adminKnowledage';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router'
 import { useAdminInfoStore } from '@/stores/Admin/adminInfo';
