@@ -173,12 +173,22 @@ onMounted(() => {
           </div>
         </template>
       </el-table-column>
+      <template #empty>
+        <div class="empty-container">
+          <el-empty description="暂无文章数据" :image-size="200">
+          </el-empty>
+        </div>
+      </template>
     </el-table>
-    <el-pagination background style="margin-top: 25px;" layout="prev, pager, next" :total="total"
-      :page-size="pagination.size" @current-change="handleChange" />
+    <el-pagination :current-page="pagination.currentPage" background style="margin-top: 25px;"
+      layout="prev, pager, next" :total="total" :page-size="pagination.size" @current-change="handleChange" />
     <ArticleDialog v-model:modelValue="dialogVisible" :editArticleList="editArticleList" :categories="categories"
       @success="handleSearch" @close="handleClose"></ArticleDialog>
   </div>
 </template>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.empty-container {
+  padding: 40px 0;
+}
+</style>
