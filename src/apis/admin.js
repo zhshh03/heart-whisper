@@ -58,3 +58,10 @@ export const updateArticleAPI = (id, data) => {
     data,
   })
 }
+
+export const deleteArticleAPI = (id) => {
+  return request({
+    url: `/knowledge/article/${id}`,
+    method: 'delete',
+  })
+}

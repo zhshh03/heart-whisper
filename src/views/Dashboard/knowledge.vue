@@ -1,9 +1,10 @@
 <script setup>
 import PageHeader from './components/PageHearder.vue';
 import CommonForm from '@/components/CommonForm.vue';
-import { getCategory, getArticleListAPI } from '@/apis/admin'
+import { getCategory, getArticleListAPI, deleteArticleAPI } from '@/apis/admin'
 import { onMounted, ref } from 'vue';
 import ArticleDialog from './components/ArticleDialog.vue';
+import { ElMessage } from 'element-plus'
 
 const title = '知识文章'
 const formItem = [
@@ -96,6 +97,12 @@ const handleClose = () => {
   dialogVisible.value = false
 }
 
+const deleteArticle = async (id) => {
+  await deleteArticleAPI(id)
+  ElMessage.success('删除成功')
+  handleSearch()
+}
+
 onMounted(() => {
   defaultSearch()
   handleSearch()
@@ -143,7 +150,7 @@ onMounted(() => {
             <el-button text type="primary" @click="editArticle(scope.row)">编辑</el-button>
             <el-button v-if="scope.row.status === 0 || scope.row.status === 2" text type="success">发布</el-button>
             <el-button v-if="scope.row.status === 1" text type="warning">下线</el-button>
-            <el-button text type="danger">删除</el-button>
+            <el-button text type="danger" @click="deleteArticle(scope.row.id)">删除</el-button>
           </div>
         </template>
       </el-table-column>
