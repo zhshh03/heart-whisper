@@ -21,7 +21,7 @@ export const getArticleListAPI = (params) => {
   })
 }
 
-export const updatFile = (file, businessInfo) => {
+export const updataFile = (file, businessInfo) => {
   const formData = new FormData()
   formData.append('file', file)
   formData.append('businessType', 'ARTICLE')

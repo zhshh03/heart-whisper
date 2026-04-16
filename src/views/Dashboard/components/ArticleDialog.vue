@@ -1,10 +1,10 @@
 <script setup>
 import { ElMessage } from 'element-plus'
 import { ref, nextTick, watch } from 'vue'
-import { updatFile } from '@/apis/admin'
+import { updataFile } from '@/apis/admin'
 import { baseFileUrl } from '@/config'
 import RichTextEditor from '@/views/Dashboard/components/RichTextEditor.vue';
-import { addArticleAPI, getArticleDetailAPI } from '@/apis/admin';
+import { addArticleAPI, getArticleDetailAPI, updateArticleAPI } from '@/apis/admin';
 
 const modelValue = defineModel({
   type: Boolean,
@@ -81,7 +81,7 @@ const businessId = ref('')
 const handleUploadRequest = async ({ file }) => {
   businessId.value = crypto.randomUUID()
 
-  const res = await updatFile(file, { businessId: businessId.value })
+  const res = await updataFile(file, { businessId: businessId.value })
   imgUrl.value = baseFileUrl + res.data.filePath
   ruleForm.value.coverImage = res.data.filePath
 
@@ -106,11 +106,19 @@ const handleEditorCreated = (editor) => {
 const handleSubmit = () => {
   ruleFormRef.value.validate(async (valid) => {
     if (valid) {
-      ruleForm.value.tags = ruleForm.value.tags.join(',')
-      await addArticleAPI(ruleForm.value)
-      ElMessage.success('文章创建成功')
-      emit('success')
-      handleClose()
+      if (ruleForm.value.id) {
+        ruleForm.value.tags = ruleForm.value.tags.join(',')
+        await updateArticleAPI(ruleForm.value.id, ruleForm.value)
+        ElMessage.success('文章修改成功')
+        emit('success')
+        handleClose()
+      } else {
+        ruleForm.value.tags = ruleForm.value.tags.join(',')
+        await addArticleAPI(ruleForm.value)
+        ElMessage.success('文章创建成功')
+        emit('success')
+        handleClose()
+      }
     } else {
       ElMessage.error('请填写完整信息')
       return
@@ -133,8 +141,11 @@ watch(() => props.editArticleList, async (newVal) => {
   if (newVal.id) {
     const res = await getArticleDetailAPI(newVal.id)
     Object.assign(ruleForm.value, res.data)
+    ruleForm.value.tags = ruleForm.value.tags.split(',')
+    console.log(ruleForm);
+
     businessId.value = newVal.id
-    imgUrl.value = baseFileUrl + res.coverImage
+    imgUrl.value = baseFileUrl + res.data.coverImage
   }
 })
 
