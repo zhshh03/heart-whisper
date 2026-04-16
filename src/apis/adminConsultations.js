@@ -6,3 +6,9 @@ export const getConsultationListAPI = (params) => {
     params,
   })
 }
+
+export const getConsultationDetailAPI = (sessionId) => {
+  return request({
+    url: `/psychological-chat/sessions/${sessionId}/messages`,
+  })
+}

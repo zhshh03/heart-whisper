@@ -1,35 +1,51 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import PageHeader from './components/PageHearder.vue';
-import { getConsultationListAPI } from '@/apis/adminConsultations'
+import { getConsultationListAPI, getConsultationDetailAPI } from '@/apis/adminConsultations'
+import ConsultationsDialog from './components/ConsultationsDialog.vue';
 
 const title = '咨询记录'
 
+//与咨询表格双向绑定的数据
 const tableData = ref([])
 
+//设置的请求数据
 const pagination = ref({
   size: 10,
   currentPage: 1,
   emotionTag: ''
 })
 
+// 为分页设置总条数
 const total = ref(0)
 
+// 获取会话详情列表
 const getConsultationsList = async (params) => {
   const res = await getConsultationListAPI(params.value)
   tableData.value = res.data.records
   total.value = res.data.total
-  console.log(tableData)
 }
 
+//分页变化触发
 const handleChange = (page) => {
   pagination.value.currentPage = page
   getConsultationsList(pagination)
 }
 
-// const viewDetails = (row) => {
+const dialogRef = ref(null)
 
-// }
+const detailList = ref({})
+const dialogDetail = ref({})
+//点击详情触发
+const dialogVisible = ref(false)
+const viewDetails = async (row) => {
+  detailList.value = row
+  dialogVisible.value = true
+  dialogRef.value.isLoading = true
+  const res = await getConsultationDetailAPI(row.id)
+  dialogRef.value.isLoading = false
+  dialogDetail.value = res.data
+}
 
 onMounted(() => {
   getConsultationsList(pagination)
@@ -65,10 +81,13 @@ onMounted(() => {
     </el-table>
     <el-pagination :current-page="pagination.currentPage" background class="pagination" layout="prev, pager, next"
       :total="total" :page-size="pagination.size" @current-change="handleChange" />
+    <ConsultationsDialog ref="dialogRef" v-model:modelValue="dialogVisible" :detail="detailList"
+      :dialogDetail="dialogDetail">
+    </ConsultationsDialog>
   </div>
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
 .consultation-table {
   width: 100%;
   margin-top: 25px;
