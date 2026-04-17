@@ -8,6 +8,10 @@ import Dashboard from '@/views/Dashboard/dashboard.vue'
 import Knowledge from '@/views/Dashboard/knowledge.vue'
 import Consultations from '@/views/Dashboard/consultations.vue'
 import Emotional from '@/views/Dashboard/emotional.vue'
+import FrontHome from '@/views/FrontBody/home.vue'
+import FrontConsultation from '@/views/FrontBody/consultation.vue'
+import FrontEmotional from '@/views/FrontBody/emotionDiary.vue'
+import FrontKnowledge from '@/views/FrontBody/knowledge.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -71,7 +75,26 @@ const router = createRouter({
     },
     {
       path: '/front',
+      redirect: '/home',
       component: Front,
+      children: [
+        {
+          path: '/home',
+          component: FrontHome,
+        },
+        {
+          path: '/consultation',
+          component: FrontConsultation,
+        },
+        {
+          path: '/emotiondiary',
+          component: FrontEmotional,
+        },
+        {
+          path: '/knowledge',
+          component: FrontKnowledge,
+        },
+      ],
     },
   ],
 })
