@@ -3,6 +3,7 @@ import PageHeader from './components/PageHearder.vue';
 import CommonForm from '@/components/CommonForm.vue';
 import { onMounted, ref } from 'vue'
 import { getEmotionalListAPI, deleteEmotionslAPI } from '@/apis/adminEmotional'
+import EmotionalDialog from '@/views/Dashboard/components/EmotionalDialog.vue';
 
 const title = '情绪日志'
 const formItem = [
@@ -38,6 +39,9 @@ const handleChange = (page) => {
 const tableData = ref([])
 const total = ref(0)
 const searchParams = ref({})
+const dialogVisible = ref(false)
+const currentDetail = ref({})
+
 //查询
 const handleSearch = async (formData) => {
   if (formData && formData.moodScreRange) {
@@ -70,7 +74,8 @@ const handleDelete = async (id) => {
 
 //详情
 const handleDetail = (row) => {
-  console.log(row)
+  currentDetail.value = row
+  dialogVisible.value = true
 }
 
 onMounted(() => {
@@ -121,4 +126,5 @@ onMounted(() => {
   </el-table>
   <el-pagination :current-page="pagination.current" background style="margin-top: 25px;" layout="prev, pager, next"
     :total="total" :page-size="pagination.size" @current-change="handleChange" />
+  <EmotionalDialog v-model="dialogVisible" :detailData="currentDetail"></EmotionalDialog>
 </template>
