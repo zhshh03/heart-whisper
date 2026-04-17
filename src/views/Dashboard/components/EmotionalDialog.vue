@@ -41,7 +41,7 @@ const getNatureTagType = (nature) => {
 </script>
 
 <template>
-  <el-dialog v-model="modelValue" title="情绪日志详情" width="70%" :close-on-click-modal="false">
+  <el-dialog v-model="modelValue" title="情绪日志详情" width="55%" :close-on-click-modal="false">
     <!-- 用户信息 -->
     <h3 class="section-title">用户信息</h3>
     <el-descriptions :column="2" border>
@@ -78,12 +78,12 @@ const getNatureTagType = (nature) => {
     <h3 class="section-title">AI情绪分析结果</h3>
     <el-descriptions :column="2" border v-if="detailData.hasAiEmotionAnalysis">
       <el-descriptions-item label="主要情绪">
-        <el-tag size="small" :type="getNatureTagType(aiAnalysis.primaryEmotion)">{{ aiAnalysis.primaryEmotion }}</el-tag>
+        <el-tag size="small" :type="getNatureTagType(aiAnalysis.primaryEmotion)">{{ aiAnalysis.primaryEmotion
+          }}</el-tag>
       </el-descriptions-item>
       <el-descriptions-item label="情绪强度">
         <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
-          <el-progress :percentage="(aiAnalysis.emotionScore || 0) * 10" :stroke-width="8"
-            style="flex: 1;" />
+          <el-progress :percentage="(aiAnalysis.emotionScore || 0) * 10" :stroke-width="8" style="flex: 1;" />
           <span>{{ (aiAnalysis.emotionScore || 0) * 10 }}%</span>
         </div>
       </el-descriptions-item>
