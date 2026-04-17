@@ -90,41 +90,40 @@ onMounted(() => {
     <PageHeader :title="title">
     </PageHeader>
     <CommonForm :formItem="formItem" @search="handleSearch"></CommonForm>
+    <el-table :data="tableData" style="margin-top: 25px; width: 100%">
+      <el-table-column label="ID" prop="userId" width="80"></el-table-column>
+      <el-table-column label="会话ID" width="80">
+        <template #default="scope">
+          <el-avatar>{{ scope.row.nickname }}</el-avatar>
+        </template>
+      </el-table-column>
+      <el-table-column label="记录日期" prop="createdAt" width="120"></el-table-column>
+      <el-table-column label="情绪评分">
+        <template #default="scope">
+          <el-rate :model-value="scope.row.moodScore" :max=10 disabled :colors="colors" />
+        </template>
+      </el-table-column>
+      <el-table-column label="生活指标" width="120">
+        <template #default="scope">
+          <div>
+            <p>睡眠：{{ scope.row.sleepQuality }}/5</p>
+            <p>压力：{{ scope.row.stressLevel }}/5</p>
+          </div>
+        </template>
+      </el-table-column>
+      <el-table-column label="情绪触发因素" prop="emotionTriggers" width="120"></el-table-column>
+      <el-table-column label="日记内容" prop="diaryContent" width="250"></el-table-column>
+      <el-table-column label="操作" width="240" fixed="right">
+        <template #default="scope">
+          <div style="display: flex; align-items: center">
+            <el-button text type="primary" @click="handleDetail(scope.row)">详情</el-button>
+            <el-button text type="danger" @click="handleDelete(scope.row.id)">删除</el-button>
+          </div>
+        </template>
+      </el-table-column>
+    </el-table>
+    <el-pagination :current-page="pagination.current" background style="margin-top: 25px;" layout="prev, pager, next"
+      :total="total" :page-size="pagination.size" @current-change="handleChange" />
+    <EmotionalDialog v-model="dialogVisible" :detailData="currentDetail"></EmotionalDialog>
   </div>
-
-  <el-table :data="tableData" style="margin-top: 25px; width: 100%">
-    <el-table-column label="ID" prop="userId" width="80"></el-table-column>
-    <el-table-column label="会话ID" width="80">
-      <template #default="scope">
-        <el-avatar>{{ scope.row.nickname }}</el-avatar>
-      </template>
-    </el-table-column>
-    <el-table-column label="记录日期" prop="createdAt" width="120"></el-table-column>
-    <el-table-column label="情绪评分">
-      <template #default="scope">
-        <el-rate :model-value="scope.row.moodScore" :max=10 disabled :colors="colors" />
-      </template>
-    </el-table-column>
-    <el-table-column label="生活指标" width="120">
-      <template #default="scope">
-        <div>
-          <p>睡眠：{{ scope.row.sleepQuality }}/5</p>
-          <p>压力：{{ scope.row.stressLevel }}/5</p>
-        </div>
-      </template>
-    </el-table-column>
-    <el-table-column label="情绪触发因素" prop="emotionTriggers" width="120"></el-table-column>
-    <el-table-column label="日记内容" prop="diaryContent" width="250"></el-table-column>
-    <el-table-column label="操作" width="240" fixed="right">
-      <template #default="scope">
-        <div style="display: flex; align-items: center">
-          <el-button text type="primary" @click="handleDetail(scope.row)">详情</el-button>
-          <el-button text type="danger" @click="handleDelete(scope.row.id)">删除</el-button>
-        </div>
-      </template>
-    </el-table-column>
-  </el-table>
-  <el-pagination :current-page="pagination.current" background style="margin-top: 25px;" layout="prev, pager, next"
-    :total="total" :page-size="pagination.size" @current-change="handleChange" />
-  <EmotionalDialog v-model="dialogVisible" :detailData="currentDetail"></EmotionalDialog>
 </template>

@@ -27,66 +27,78 @@ onMounted(() => {
   <div>
     <PageHeader :title="title">
     </PageHeader>
-  </div>
-  <div class="dashboard-container">
-    <el-row :gutter="24">
-      <el-col :span="6">
-        <el-card v-if="dashboardCardData">
-          <div class="card-content">
-            <div class="avatar users">
-              <el-image style="width: 35px; height: 35px;" :src="imgUrl1"></el-image>
+    <div class="dashboard-container">
+      <el-row :gutter="20">
+        <el-col :span="6">
+          <el-card v-if="dashboardCardData">
+            <div class="card-content">
+              <div class="avatar users">
+                <el-image style="width: 35px; height: 35px;" :src="imgUrl1"></el-image>
+              </div>
+              <div class="info">
+                <p class="title">用户总数</p>
+                <p class="number">{{ dashboardCardData.totalUsers }}</p>
+                <p class="subtitle-title">活跃用户：{{ dashboardCardData.activeUsers }}</p>
+              </div>
             </div>
-            <div class="info">
-              <p class="title">用户总数</p>
-              <p class="number">{{ dashboardCardData.totalUsers }}</p>
-              <p class="subtitle-title">活跃用户：{{ dashboardCardData.activeUsers }}</p>
+          </el-card>
+        </el-col>
+        <el-col :span="6">
+          <el-card v-if="dashboardCardData">
+            <div class="card-content">
+              <div class="avatar like">
+                <el-image style="width: 35px; height: 35px;" :src="imgUrl2"></el-image>
+              </div>
+              <div class="info">
+                <p class="title">情绪日志</p>
+                <p class="number">{{ dashboardCardData.totalDiaries }}</p>
+                <p class="subtitle-title">今日新增：{{ dashboardCardData.todayNewDiaries }}</p>
+              </div>
             </div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card v-if="dashboardCardData">
-          <div class="card-content">
-            <div class="avatar like">
-              <el-image style="width: 35px; height: 35px;" :src="imgUrl2"></el-image>
+          </el-card>
+        </el-col>
+        <el-col :span="6">
+          <el-card v-if="dashboardCardData">
+            <div class="card-content">
+              <div class="avatar comments">
+                <el-image style="width: 35px; height: 35px;" :src="imgUrl3"></el-image>
+              </div>
+              <div class="info">
+                <p class="title">咨询会话</p>
+                <p class="number">{{ dashboardCardData.totalSessions }}</p>
+                <p class="subtitle-title">今日新增：{{ dashboardCardData.todayNewSessions }}</p>
+              </div>
             </div>
-            <div class="info">
-              <p class="title">情绪日志</p>
-              <p class="number">{{ dashboardCardData.totalDiaries }}</p>
-              <p class="subtitle-title">今日新增：{{ dashboardCardData.todayNewDiaries }}</p>
+          </el-card>
+        </el-col>
+        <el-col :span="6">
+          <el-card v-if="dashboardCardData">
+            <div class="card-content">
+              <div class="avatar smile">
+                <el-image style="width: 35px; height: 35px;" :src="imgUrl4"></el-image>
+              </div>
+              <div class="info">
+                <p class="title">平均情绪</p>
+                <p class="number">{{ dashboardCardData.avgMoodScore }}/10</p>
+                <p class="subtitle-title">情绪健康指数</p>
+              </div>
             </div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card v-if="dashboardCardData">
-          <div class="card-content">
-            <div class="avatar comments">
-              <el-image style="width: 35px; height: 35px;" :src="imgUrl3"></el-image>
-            </div>
-            <div class="info">
-              <p class="title">咨询会话</p>
-              <p class="number">{{ dashboardCardData.totalSessions }}</p>
-              <p class="subtitle-title">今日新增：{{ dashboardCardData.todayNewSessions }}</p>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card v-if="dashboardCardData">
-          <div class="card-content">
-            <div class="avatar smile">
-              <el-image style="width: 35px; height: 35px;" :src="imgUrl4"></el-image>
-            </div>
-            <div class="info">
-              <p class="title">平均情绪</p>
-              <p class="number">{{ dashboardCardData.avgMoodScore }}/10</p>
-              <p class="subtitle-title">情绪健康指数</p>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
+          </el-card>
+        </el-col>
+      </el-row>
+      <el-row style="margin-top: 20px;" :gutter="20">
+        <el-col :span="12">
+          <el-card>
+            <template #header>
+              <div class="card-header">
+                情绪分析趋势
+              </div>
+            </template>
+            <div class="chart-content"></div>
+          </el-card>
+        </el-col>
+      </el-row>
+    </div>
   </div>
 </template>
 
