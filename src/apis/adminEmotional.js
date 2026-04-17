@@ -6,3 +6,10 @@ export const getEmotionalListAPI = (params) => {
     params,
   })
 }
+
+export const deleteEmotionslAPI = (id) => {
+  return request({
+    url: `/emotion-diary/admin/${id}`,
+    method: 'delete',
+  })
+}

@@ -2,7 +2,7 @@
 import PageHeader from './components/PageHearder.vue';
 import CommonForm from '@/components/CommonForm.vue';
 import { onMounted, ref } from 'vue'
-import { getEmotionalListAPI } from '@/apis/adminEmotional'
+import { getEmotionalListAPI, deleteEmotionslAPI } from '@/apis/adminEmotional'
 
 const title = '情绪日志'
 const formItem = [
@@ -59,9 +59,18 @@ const handleSearch = async (formData) => {
     ...pagination.value
   })
   tableData.value = data.data.records
-  console.log(tableData.value)
-
   total.value = data.data.total
+}
+
+//删除情绪日志
+const handleDelete = async (id) => {
+  await deleteEmotionslAPI(id)
+  handleSearch()
+}
+
+//详情
+const handleDetail = (row) => {
+  console.log(row)
 }
 
 onMounted(() => {
@@ -104,8 +113,8 @@ onMounted(() => {
     <el-table-column label="操作" width="240" fixed="right">
       <template #default="scope">
         <div style="display: flex; align-items: center">
-          <el-button text type="primary" @click="editArticle(scope.row)">详情</el-button>
-          <el-button text type="danger" @click="deleteArticle(scope.row.id)">删除</el-button>
+          <el-button text type="primary" @click="handleDetail(scope.row)">详情</el-button>
+          <el-button text type="danger" @click="handleDelete(scope.row.id)">删除</el-button>
         </div>
       </template>
     </el-table-column>
