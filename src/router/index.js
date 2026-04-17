@@ -76,4 +76,32 @@ const router = createRouter({
   ],
 })
 
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem('token')
+  if (token) {
+    const adminInfo = JSON.parse(localStorage.getItem('adminInfo'))
+    if (adminInfo.userType === 2) {
+      if (to.path.startsWith('/back')) {
+        next()
+      } else {
+        next('/back/dashboard')
+      }
+    } else if (adminInfo.userType === 1) {
+      if (to.path.startsWith('/front')) {
+        next()
+      } else {
+        next('/front')
+      }
+    } else {
+      next('/auth/login')
+    }
+  } else {
+    if (to.path.startsWith('/back')) {
+      next('/auth/login')
+    } else {
+      next()
+    }
+  }
+})
+
 export default router
