@@ -2,14 +2,16 @@
 import { useRouter } from 'vue-router'
 import { useAdminLayoutStore } from '@/stores/Admin/adminLayout'
 import { useAdminInfoStore } from '@/stores/Admin/adminInfo'
+import { loginOutAPI } from '@/apis/adminDashboard'
 
 
 const adminLayoutStore = useAdminLayoutStore()
 const adminInfoStore = useAdminInfoStore()
 
 const router = useRouter()
-const handleCommand = (command) => {
+const handleCommand = async (command) => {
   if (command === 'logout') {
+    await loginOutAPI()
     adminInfoStore.clearAdminInfo()
     router.push('/auth/login')
   } else {

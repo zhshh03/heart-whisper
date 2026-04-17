@@ -14,7 +14,7 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      redirect: '/auth/login',
+      redirect: '/front',
     },
     {
       path: '/auth',
@@ -27,7 +27,7 @@ const router = createRouter({
         {
           path: '/auth/register',
           component: Register,
-        }
+        },
       ],
     },
     {
@@ -38,41 +38,41 @@ const router = createRouter({
         {
           path: '/back/dashboard',
           component: Dashboard,
-          meta:{
-            title:'数据分析',
-            icon:'PieChart'
-          }
+          meta: {
+            title: '数据分析',
+            icon: 'PieChart',
+          },
         },
         {
           path: '/back/knowledge',
           component: Knowledge,
-          meta:{
-            title:'知识文章',
-            icon:'ChatLineSquare'
-          }
+          meta: {
+            title: '知识文章',
+            icon: 'ChatLineSquare',
+          },
         },
         {
           path: '/back/consultations',
           component: Consultations,
-          meta:{
-            title:'咨询记录',
-            icon:'Message'
-          }
+          meta: {
+            title: '咨询记录',
+            icon: 'Message',
+          },
         },
         {
           path: '/back/emotional',
           component: Emotional,
-          meta:{
-            title:'情绪日志',
-            icon:'User'
-          }
-        }
+          meta: {
+            title: '情绪日志',
+            icon: 'User',
+          },
+        },
       ],
     },
     {
       path: '/front',
       component: Front,
-    }
+    },
   ],
 })
 
