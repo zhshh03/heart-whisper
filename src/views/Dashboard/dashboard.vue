@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue';
 import PageHeader from './components/PageHearder.vue';
 import { getAdminDashboardAPI } from '@/apis/adminDashboard'
+import * as echarts from 'echarts';
 
 const title = '数据分析'
 
@@ -11,10 +12,121 @@ const imgUrl3 = new URL('@/assets/images/comments.png', import.meta.url).href
 const imgUrl4 = new URL('@/assets/images/smile.png', import.meta.url).href
 
 const dashboardCardData = ref(null)
+const trendChartData = ref([])
+const loading = ref(false)
 
 const getAdminDashboard = async () => {
+  loading.value = true
   const res = await getAdminDashboardAPI()
+  trendChartData.value = res.data.emotionTrend
   dashboardCardData.value = res.data.systemOverview
+  loading.value = false
+  initCharts()
+}
+
+let emotionChart = null
+
+const emotionChartRef = ref(null)
+
+const initCharts = () => {
+  initEmotionChart()
+}
+
+const initEmotionChart = () => {
+  if (!emotionChartRef.value) return
+  if (emotionChart) {
+    emotionChart.dispose()
+  }
+  emotionChart = echarts.init(emotionChartRef.value)
+
+  const option = {
+    title: {
+      text: '情绪趋势分析',
+      textStyle: {
+        color: '#2d3436',
+        fontSize: 16,
+        fontWeight: 600
+      },
+      left: 'center',
+      top: 10
+    },
+    tooltip: {
+      trigger: 'axis',
+      borderColor: '#fab1a0',
+      borderWidth: 1,
+      textStyle: {
+        color: '#2d3436'
+      }
+    },
+    legend: {
+      data: ['平均情绪评分', '记录数量'],
+      top: 40
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '3%',
+      top: 80
+    },
+    xAxis: {
+      type: 'category',
+      data: trendChartData.value?.map(item => item.date) || [],
+      axisLIne: {
+        lineStyle: {
+          color: '#2d3436'
+        }
+      }
+    },
+    yAxis: [
+      {
+        type: 'value',
+        name: '平均情绪评分',
+        position: 'left',
+        axisLine: {
+          lineStyle: {
+            color: '#2d3436'
+          }
+        },
+      },
+      {
+        type: 'value',
+        name: '记录数量',
+        position: 'right',
+        axisLine: {
+          lineStyle: {
+            color: '#2d3436'
+          }
+        },
+      }],
+    series: [{
+      name: '平均情绪评分',
+      type: 'line',
+      data: trendChartData.value?.map(item => item.avgMoodScore),
+      smooth: true,
+      lineStyle: {
+        width: 3,
+        color: '#faebaf'
+      },
+      itemStyle: {
+        color: '#faebaf'
+      }
+    },
+    {
+      name: '记录数量',
+      type: 'line',
+      data: trendChartData.value?.map(item => item.recordCount),
+      smooth: true,
+      lineStyle: {
+        width: 3,
+        color: '#eeb5a3'
+      },
+      itemStyle: {
+        color: '#eeb5a3'
+      }
+    }
+    ]
+  }
+  emotionChart.setOption(option)
 }
 
 onMounted(() => {
@@ -27,7 +139,7 @@ onMounted(() => {
   <div>
     <PageHeader :title="title">
     </PageHeader>
-    <div class="dashboard-container">
+    <div class="dashboard-container" v-loading="loading">
       <el-row :gutter="20">
         <el-col :span="6">
           <el-card v-if="dashboardCardData">
@@ -94,7 +206,9 @@ onMounted(() => {
                 情绪分析趋势
               </div>
             </template>
-            <div class="chart-content"></div>
+            <div class="chart-content">
+              <div ref="emotionChartRef" style="width: 100%; height: 300px;"></div>
+            </div>
           </el-card>
         </el-col>
       </el-row>

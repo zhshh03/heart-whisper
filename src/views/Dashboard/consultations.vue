@@ -6,8 +6,9 @@ import ConsultationsDialog from './components/ConsultationsDialog.vue';
 
 const title = '咨询记录'
 
-//与咨询表格双向绑定的数据
+// 与咨询表格双向绑定的数据
 const tableData = ref([])
+const loading = ref(false)
 
 //设置的请求数据
 const pagination = ref({
@@ -21,9 +22,11 @@ const total = ref(0)
 
 // 获取会话详情列表
 const getConsultationsList = async (params) => {
+  loading.value = true
   const res = await getConsultationListAPI(params.value)
   tableData.value = res.data.records
   total.value = res.data.total
+  loading.value = false
 }
 
 //分页变化触发
@@ -54,7 +57,7 @@ onMounted(() => {
 
 
 <template>
-  <div>
+  <div v-loading="loading">
     <PageHeader :title="title">
     </PageHeader>
     <el-table

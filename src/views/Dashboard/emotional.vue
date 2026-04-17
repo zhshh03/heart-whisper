@@ -41,9 +41,11 @@ const total = ref(0)
 const searchParams = ref({})
 const dialogVisible = ref(false)
 const currentDetail = ref({})
+const loading = ref(false)
 
 //查询
 const handleSearch = async (formData) => {
+  loading.value = true
   if (formData && formData.moodScreRange) {
     const [min, max] = formData.moodScreRange.split('-')
     searchParams.value = {
@@ -64,6 +66,7 @@ const handleSearch = async (formData) => {
   })
   tableData.value = data.data.records
   total.value = data.data.total
+  loading.value = false
 }
 
 //删除情绪日志
@@ -86,7 +89,7 @@ onMounted(() => {
 
 
 <template>
-  <div>
+  <div v-loading="loading">
     <PageHeader :title="title">
     </PageHeader>
     <CommonForm :formItem="formItem" @search="handleSearch"></CommonForm>
@@ -105,7 +108,7 @@ onMounted(() => {
       </el-table-column>
       <el-table-column label="生活指标" width="120">
         <template #default="scope">
-          <div>
+          <div v-loading="loading">
             <p>睡眠：{{ scope.row.sleepQuality }}/5</p>
             <p>压力：{{ scope.row.stressLevel }}/5</p>
           </div>

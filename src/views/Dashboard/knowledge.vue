@@ -55,13 +55,15 @@ const pagination = ref({
   currentPage: 1,
   authorName: ''
 })
-//表格数据及总条数
+// 表格数据及总条数
 const tableData = ref([])
 const total = ref()
+const loading = ref(false)
 
 const searchParams = ref({})
 //查询
 const handleSearch = async (formData) => {
+  loading.value = true
   if (formData) {
     searchParams.value = { ...formData }
     pagination.value.currentPage = 1
@@ -72,6 +74,7 @@ const handleSearch = async (formData) => {
   })
   tableData.value = data.data.records
   total.value = data.data.total
+  loading.value = false
 }
 //分页改变
 const handleChange = (page) => {
@@ -128,7 +131,7 @@ onMounted(() => {
 
 
 <template>
-  <div>
+  <div v-loading="loading">
     <PageHeader :title="title">
       <template #button>
         <el-button type="primary" @click="addArticle">新增</el-button>
