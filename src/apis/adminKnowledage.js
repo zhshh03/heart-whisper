@@ -2,7 +2,15 @@ import request from '@/utils/http'
 
 export const loginAPI = (data) => {
   return request({
-    url: '/user/login',
+    url: '/user/add',
+    method: 'post',
+    data,
+  })
+}
+
+export const registerAPI = (data) => {
+  return request({
+    url: '/user/register',
     method: 'post',
     data,
   })

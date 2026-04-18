@@ -1,12 +1,19 @@
 <script setup>
 import { onMounted, ref } from 'vue';
+import { loginOutAPI } from '@/apis/adminDashboard'
+import { useRouter } from 'vue-router'
 
-// import { useRouter } from 'vue-router'
-
-// const router = useRouter()
+const router = useRouter()
 
 const isLogin = ref(false)
 const urlImg = new URL('@/assets/images/机器人.png', import.meta.url).href
+
+const logout = async () => {
+  await loginOutAPI()
+  localStorage.removeItem('token')
+  localStorage.removeItem('adminInfo')
+  router.push('/auth/login')
+}
 
 onMounted(() => {
   isLogin.value = localStorage.getItem('token') !== null
@@ -25,7 +32,7 @@ onMounted(() => {
         <router-link to="/consultation" class="nav-link" v-if="isLogin">AI咨询</router-link>
         <router-link to="/emotiondiary" class="nav-link" v-if="isLogin">情绪日志</router-link>
         <router-link to="/knowledge" class="nav-link">知识库</router-link>
-        <el-button class="logout-btn" v-if="isLogin">退出登录</el-button>
+        <el-button class="logout-btn" v-if="isLogin" @click="logout">退出登录</el-button>
         <template v-else>
           <router-link to="/auth/login" class="nav-link">登录</router-link>
           <router-link to="/auth/register" class="nav-link">
