@@ -110,10 +110,10 @@ router.beforeEach((to, from, next) => {
         next('/back/dashboard')
       }
     } else if (adminInfo.userType === 1) {
-      if (to.path.startsWith('/front')) {
-        next()
+      if (to.path.startsWith('/back') || to.path.startsWith('/auth')) {
+        next('/home')
       } else {
-        next('/front')
+        next()
       }
     } else {
       next('/auth/login')

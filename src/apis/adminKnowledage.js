@@ -2,7 +2,7 @@ import request from '@/utils/http'
 
 export const loginAPI = (data) => {
   return request({
-    url: '/user/add',
+    url: '/user/login',
     method: 'post',
     data,
   })
@@ -10,7 +10,7 @@ export const loginAPI = (data) => {
 
 export const registerAPI = (data) => {
   return request({
-    url: '/user/register',
+    url: '/user/add',
     method: 'post',
     data,
   })

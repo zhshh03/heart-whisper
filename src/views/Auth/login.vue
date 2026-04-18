@@ -28,6 +28,8 @@ const handleLogin = (formEl) => {
       const res = await loginAPI(formData.value)
       adminInfoStore.setToken(res.data.token)
       adminInfoStore.setAdminInfo(res.data.userInfo)
+      console.log(res.data)
+
       if (res.data.roleType === '2') {
         router.push('/back')
       } else {

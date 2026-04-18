@@ -30,15 +30,17 @@ const submitForm = async (submitFormRef) => {
   if (!submitFormRef) return
   submitFormRef.validate(async (valid) => {
     if (valid) {
-      await registerAPI(formData.value)
-      ElMessage.success('注册成功')
-      router.push('/auth/login')
+      try {
+        await registerAPI(formData.value)
+        ElMessage.success('注册成功')
+        router.push('/auth/login')
+      } catch {
+        // 注册失败已在http拦截器中提示错误信息
+      }
     } else {
       return false
     }
-
   })
-
 }
 </script>
 
