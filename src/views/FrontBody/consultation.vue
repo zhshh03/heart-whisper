@@ -1,20 +1,29 @@
 <script setup>
 import { onMounted, ref } from 'vue';
+import { ElMessage } from 'element-plus';
+import { createNewChatAPI, getSessionListAPI } from '@/apis/AiConsultation'
+import { ChatRound, DeleteFilled } from '@element-plus/icons-vue';
 // 引入图片
 const urlImage1 = new URL('@/assets/images/robot-fill.png', import.meta.url).href
 const urlImage2 = new URL('@/assets/images/like.png', import.meta.url).href
 
+//获取当前用户信息
+const userInfo = ref({})
+userInfo.value = JSON.parse(localStorage.getItem('adminInfo'))
+
 // 消息列表
-const message = ref([])
+const messageList = ref([])
+
+//会话列表
+const sessionList = ref([])
 //用户输入的消息
 const userMessage = ref('')
 
 //是否正在与AI对话
 const isAiTying = ref(false)
 
-//获取当前用户信息
-const userInfo = ref({})
-userInfo.value = JSON.parse(localStorage.getItem('adminInfo'))
+//当前会话对象 
+const currentSession = ref(null)
 
 //创建新会话（首次加载页面自动创建）
 const createNewChat = async () => {
@@ -26,18 +35,73 @@ const createNewChat = async () => {
   currentSession.value = newSession
 }
 
-//当前会话对象 
-const currentSession = ref(null)
-
-//发送消息
-const sendMessage = async (e) => {
+//发送消息(键盘操作)
+const handleDown = async (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault()
   }
 }
 
+//发送消息(点击按钮)
+const sendMessage = async () => {
+  // 如果用户输入为空，则不发送消息
+  if (userMessage.value.trim() === '') return
+  //如果正在与AI对话，则不发送消息
+  if (isAiTying.value) {
+    ElMessage.error('AI助手正在思考中，请稍后')
+    return
+  }
+  //将用户输入的消息赋值给message，并清空用户输入的消息
+  const message = userMessage.value.trim()
+  userMessage.value = ''
+  //如果当前会话状态为TEMP，则开始新会话
+  if (currentSession.value.status === 'TEMP') {
+    startNewSession(message)
+  }
+}
+
+//开始新会话
+const startNewSession = async (message) => {
+  //设置会话参数
+  const sessionParams = {
+    initialMessage: message
+  }
+  //如果当前会话标题为新对话，则设置会话标题为当前时间,否则不变
+  if (currentSession.value.sessionTitle === '新对话') {
+    sessionParams.sessionTitle = `宁度AI助手 - ${new Date().toLocaleString()}`
+  } else {
+    sessionParams.sessionTitle = currentSession.value.sessionTitle
+  }
+  //发送创建新会话请求
+  const res = await createNewChatAPI(sessionParams)
+  //设置当前会话id、状态、标题
+  const sessionData = {
+    sessionId: res.data.sessionId,
+    status: res.data.status,
+    sessionTitle: sessionParams.sessionTitle
+  }
+  //如果当前会话状态为TEMP，则更新当前会话
+  if (currentSession.value && currentSession.value.status === 'TEMP') {
+    Object.assign(currentSession.value, sessionData)
+  } else {
+    currentSession.value = sessionData
+  }
+  getSessionList()
+
+}
+
+const getSessionList = async () => {
+  const res = await getSessionListAPI({
+    pageNum: 1,
+    pageSize: 10
+  })
+  sessionList.value = res.data.records
+
+}
+
 onMounted(() => {
   createNewChat()
+  getSessionList()
 })
 </script>
 
@@ -53,6 +117,46 @@ onMounted(() => {
         <div class="online-status">
           <div class="status-dot"></div>
           在线服务中
+        </div>
+      </div>
+      <div class="session-history">
+        <h4 class="section-title">会话列表</h4>
+        <div class="session-list">
+          <div v-for="session in sessionList" :key="session.id" @click="handleSessionClick(session)"
+            class="session-item">
+            <div class="session-info">
+              <div class="session-title">
+                <span>{{ session.sessionTitle }}</span>
+                <div class="session-meta">
+                  <span class="session-time">{{ session.startedAt }}</span>
+                </div>
+                <div class="session-preview">
+                  {{ session.lastMessageContent }}
+                </div>
+                <div class="session-stats">
+                  <span>
+                    <el-icon>
+                      <ChatRound />
+                    </el-icon>
+                    {{ session.messageCount || 0 }}
+                  </span>
+                  <span>
+                    <el-icon>
+                      <Clock />
+                    </el-icon>
+                    {{ session.durationMinutes || 0 }}分钟
+                  </span>
+                </div>
+              </div>
+              <div class="session-actions">
+                <el-button text type="danger" size="mini" @click="handleDeleteSession(session.id)">
+                  <el-icon>
+                    <DeleteFilled />
+                  </el-icon>
+                </el-button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -74,7 +178,7 @@ onMounted(() => {
         </el-button>
       </div>
       <div class="chat-messages">
-        <div class="message-item ai-message" v-if="message.length === 0">
+        <div class="message-item ai-message" v-if="messageList.length === 0">
           <div class="message-avatar">
             <el-image :src="urlImage1" style="width: 18px; height: 18px;"></el-image>
           </div>
@@ -89,7 +193,7 @@ onMounted(() => {
       <div class="chat-input">
         <div class="input-container">
           <el-input v-model="userMessage" placeholder="请输入内容" type="textarea" :rows="3" :disabled="isAiTying" clearable
-            :class="message - input" @keydown="sendMessage"></el-input>
+            :class="message - input" @keydown="handleDown"></el-input>
         </div>
         <el-button type="primary" class="send-btn" @click="sendMessage">
           <el-icon>
