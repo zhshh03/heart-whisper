@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, ref } from 'vue';
-import { loginOutAPI } from '@/apis/adminDashboard'
+import { loginOutAPI } from '@/apis/userInfo'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -28,7 +28,7 @@ onMounted(() => {
         <h1 class="brand-name">心理健康AI助手</h1>
       </div>
       <div class="nav-section">
-        <router-link to="/" class="nav-link">首页</router-link>
+        <router-link to="/home" class="nav-link">首页</router-link>
         <router-link to="/consultation" class="nav-link" v-if="isLogin">AI咨询</router-link>
         <router-link to="/emotiondiary" class="nav-link" v-if="isLogin">情绪日志</router-link>
         <router-link to="/knowledge" class="nav-link">知识库</router-link>
@@ -94,6 +94,24 @@ onMounted(() => {
 
         &:hover {
           color: #1296db;
+        }
+
+        &.router-link-active {
+          color: #1296db;
+          font-weight: 600;
+          position: relative;
+
+          &::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 3px;
+            background: #1296db;
+            border-radius: 2px;
+          }
         }
       }
     }

@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { registerAPI } from '@/apis/adminKnowledage'
+import { registerAPI } from '@/apis/userInfo'
 import { ElMessage } from 'element-plus'
 
 const router = useRouter()

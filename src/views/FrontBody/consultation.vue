@@ -1,8 +1,44 @@
 <script setup>
-
+import { onMounted, ref } from 'vue';
+// 引入图片
 const urlImage1 = new URL('@/assets/images/robot-fill.png', import.meta.url).href
 const urlImage2 = new URL('@/assets/images/like.png', import.meta.url).href
 
+// 消息列表
+const message = ref([])
+//用户输入的消息
+const userMessage = ref('')
+
+//是否正在与AI对话
+const isAiTying = ref(false)
+
+//获取当前用户信息
+const userInfo = ref({})
+userInfo.value = JSON.parse(localStorage.getItem('adminInfo'))
+
+//创建新会话（首次加载页面自动创建）
+const createNewChat = async () => {
+  const newSession = {
+    sessionId: `temp_${Date.now()}`,
+    status: 'TEMP',
+    sessionTitle: '新对话'
+  }
+  currentSession.value = newSession
+}
+
+//当前会话对象 
+const currentSession = ref(null)
+
+//发送消息
+const sendMessage = async (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault()
+  }
+}
+
+onMounted(() => {
+  createNewChat()
+})
 </script>
 
 
@@ -13,8 +49,9 @@ const urlImage2 = new URL('@/assets/images/like.png', import.meta.url).href
         <div class="breathing-circle">
           <el-image :src="urlImage1" alt="AI助手" class="assistant-icon" style="width: 25px; height: 25px;"></el-image>
         </div>
-        <h3 class="assistant-name">宁度AI助手</h3>
+        <h3 class="assistant-name">AI助手</h3>
         <div class="online-status">
+          <div class="status-dot"></div>
           在线服务中
         </div>
       </div>
@@ -36,12 +73,29 @@ const urlImage2 = new URL('@/assets/images/like.png', import.meta.url).href
           </el-icon>
         </el-button>
       </div>
-      <div class="chat-mesages">
-        <div class="message-item ai-message">
+      <div class="chat-messages">
+        <div class="message-item ai-message" v-if="message.length === 0">
           <div class="message-avatar">
-            <el-image style="width: 18px; height: 18px;" :src="urlImage1"></el-image>
+            <el-image :src="urlImage1" style="width: 18px; height: 18px;"></el-image>
+          </div>
+          <div class="message-content">
+            <div class="message-bubble">
+              <p>你好：{{ userInfo.nickname }}，我是宁度AI助手，很高兴为您服务。</p>
+            </div>
+            <div class="message-time">刚刚</div>
           </div>
         </div>
+      </div>
+      <div class="chat-input">
+        <div class="input-container">
+          <el-input v-model="userMessage" placeholder="请输入内容" type="textarea" :rows="3" :disabled="isAiTying" clearable
+            :class="message - input" @keydown="sendMessage"></el-input>
+        </div>
+        <el-button type="primary" class="send-btn" @click="sendMessage">
+          <el-icon>
+            <Promotion />
+          </el-icon>
+        </el-button>
       </div>
     </div>
   </div>

@@ -2,7 +2,7 @@
 import { useRouter } from 'vue-router'
 import { useAdminLayoutStore } from '@/stores/Admin/adminLayout'
 import { useAdminInfoStore } from '@/stores/Admin/adminInfo'
-import { loginOutAPI } from '@/apis/adminDashboard'
+import { loginOutAPI } from '@/apis/userInfo'
 
 
 const adminLayoutStore = useAdminLayoutStore()
