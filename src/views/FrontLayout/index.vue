@@ -48,16 +48,20 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .frontend-layout {
-  background-color: #fff;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #f0f7ff 0%, #e6f7f5 100%);
+  overflow-x: hidden;
 
   .navbar-container {
-    max-width: 1200px;
     height: 100%;
-    margin: 0 auto;
-    padding: 10px;
+    padding: 12px 40px;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    background: #fff;
 
     .brand-section {
       display: flex;
@@ -82,16 +86,16 @@ onMounted(() => {
         font-weight: 500;
 
         &:hover {
-          color: #4A90E2;
+          color: #1296db;
         }
       }
     }
   }
 
   .footer-container {
-    background: #1f2937;
+    background: linear-gradient(135deg, #1a3a4a 0%, #0d2b36 100%);
     color: white;
-    padding: 15px 0;
+    padding: 18px 0;
     margin-top: auto;
 
     .footer-bottom {
