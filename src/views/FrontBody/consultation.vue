@@ -4,29 +4,46 @@ import { ElMessage } from 'element-plus';
 import { createNewChatAPI, getSessionListAPI, deleteSessionAPI, getSessionDetailAPI } from '@/apis/AiConsultation'
 import { ChatRound, DeleteFilled } from '@element-plus/icons-vue';
 import MarkDownRenderer from '@/views/FrontBody/components/MarkDownRenderer.vue'
+import { fetchEventSource } from '@microsoft/fetch-event-source';
 // 引入图片
 const urlImage1 = new URL('@/assets/images/robot-fill.png', import.meta.url).href
 const urlImage2 = new URL('@/assets/images/like.png', import.meta.url).href
 const urlImage3 = new URL('@/assets/images/users.png', import.meta.url).href
 
-//获取当前用户信息
-const userInfo = ref({})
-userInfo.value = JSON.parse(localStorage.getItem('adminInfo'))
-
-// 消息列表（存储当前会话的消息记录）
-const messageList = ref([])
-
 //会话列表（记录所有会话）
 const sessionList = ref([])
-//用户输入的消息
-const userMessage = ref('')
+// 消息列表（存储当前会话的消息记录）
+const messageList = ref([])
+//更新会话列表
+const getSessionList = async () => {
+  const res = await getSessionListAPI({
+    pageNum: 1,
+    pageSize: 10
+  })
+  sessionList.value = res.data.records
+}
+//点击会话获取会话详情
+const handleSessionClick = async (session) => {
+  const res = await getSessionDetailAPI(session.id)
+  messageList.value = res.data
+  //更新当前会话对象数据
+  const sessionData = {
+    sessionId: "session_" + session.id,
+    status: 'ACTIVE',
+    sessionTitle: session.sessionTitle
+  }
+  currentSession.value = sessionData
+}
+//删除会话列表
+const handleDeleteSession = async (sessionId) => {
+  await deleteSessionAPI(sessionId)
+  getSessionList()
+  ElMessage.success('删除成功')
+}
 
-//是否正在与AI对话
-const isAiTying = ref(false)
 
 //当前会话对象 
 const currentSession = ref(null)
-
 //创建新会话（首次加载页面自动创建）
 const createNewChat = async () => {
   const newSession = {
@@ -35,12 +52,25 @@ const createNewChat = async () => {
     sessionTitle: '新对话'
   }
   currentSession.value = newSession
+  // 清空消息列表，展示欢迎语
+  messageList.value = []
 }
+
+//获取当前用户信息
+const userInfo = ref({})
+userInfo.value = JSON.parse(localStorage.getItem('adminInfo'))
+
+//用户输入的消息
+const userMessage = ref('')
+
+//是否正在与AI对话
+const isAiTying = ref(false)
 
 //发送消息(键盘操作)
 const handleDown = async (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault()
+    sendMessage()
   }
 }
 
@@ -59,6 +89,15 @@ const sendMessage = async () => {
   //如果当前会话状态为TEMP，则开始新会话
   if (currentSession.value.status === 'TEMP') {
     startNewSession(message)
+  } else {
+    // ACTIVE 会话中继续发送消息
+    messageList.value.push({
+      id: Date.now(),
+      senderType: 1,
+      content: message,
+      createdAt: new Date().toLocaleString()
+    })
+    startAIResponse(currentSession.value.sessionId, message)
   }
 }
 
@@ -91,28 +130,86 @@ const startNewSession = async (message) => {
   //当创建新会话成功后，重新获取会话列表
   getSessionList()
 
-}
-//获取会话列表
-const getSessionList = async () => {
-  const res = await getSessionListAPI({
-    pageNum: 1,
-    pageSize: 10
+  messageList.value.push({
+    id: Date.now(),
+    senderType: 1,
+    content: message,
+    createdAt: new Date().toLocaleString()
   })
-  sessionList.value = res.data.records
+  //开始流式会话
+  startAIResponse(currentSession.value.sessionId, message)
 }
 
-//删除会话列表
-const handleDeleteSession = async (sessionId) => {
-  await deleteSessionAPI(sessionId)
-  getSessionList()
-  ElMessage.success('删除成功')
+const startAIResponse = (sessionId, userMessage) => {
+  isAiTying.value = true
+  const aiMeessage = {
+    id: `ai_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+    senderType: 2,
+    content: '',
+    createdAt: new Date().toLocaleString()
+  }
+  messageList.value.push(aiMeessage)
+  const ctrl = new AbortController()
+  const token = localStorage.getItem('token')
+  fetchEventSource('/api/psychological-chat/stream', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'text/event-stream',
+      ...(token ? { token } : {})
+    },
+    body: JSON.stringify({
+      sessionId: sessionId,
+      userMessage: userMessage
+    }),
+    signal: ctrl.signal,
+    onopen: (response) => {
+      if (response.headers.get('Content-Type') !== 'text/event-stream') {
+        ElMessage.error('连接失败')
+      }
+    },
+    onmessage: (event) => {
+      const raw = event.data.trim()
+      if (!raw) return
+      const eventName = event.event
+
+      const aiMessage = messageList.value[messageList.value.length - 1]
+      if (eventName === 'done') {
+        isAiTying.value = false
+        ctrl.abort()
+        return
+      }
+      const payload = JSON.parse(raw)
+      const ok = String(payload.code) === '200'
+      if (ok && payload.data && payload.data.content) {
+        aiMessage.content += payload.data.content
+      } else if (!ok) {
+        handleError(payload.msg || 'AI助手出错了')
+      }
+    },
+    onerror: () => {
+      handleError()
+      // 不抛出 err，避免 fetchEventSource 自动重试和未捕获异常
+    },
+    onclose: () => {
+      // 连接关闭时确保恢复状态，防止 isAiTying 卡死
+      if (isAiTying.value) {
+        isAiTying.value = false
+      }
+    }
+  })
 }
 
-//点击会话获取会话详情
-const handleSessionClick = async (session) => {
-  const res = await getSessionDetailAPI(session.id)
-  messageList.value = res.data
+//处理错误信息
+const handleError = () => {
+  const aiMessage = messageList.value[messageList.value.length - 1]
+  if (aiMessage) {
+    aiMessage.content = 'AI助手出错了'
+  }
+  isAiTying.value = false
+  ElMessage.error('AI助手出错了')
 }
+
 //对用户输入的消息进行格式化
 const formatMessageContent = (content) => {
   return content.replace(/\n/g, '<br>')
@@ -142,7 +239,7 @@ onMounted(() => {
         <h4 class="section-title">会话列表</h4>
         <div class="session-list">
           <div v-for="session in sessionList" :key="session.id" @click="handleSessionClick(session)"
-            class="session-item">
+            class="session-item" :class="{ active: currentSession?.sessionId === 'session_' + session.id }">
             <div class="session-info">
               <div class="session-title">
                 <span>{{ session.sessionTitle }}</span>
@@ -168,7 +265,7 @@ onMounted(() => {
                 </div>
               </div>
               <div class="session-actions">
-                <el-button text type="danger" size="mini" @click="handleDeleteSession(session.id)">
+                <el-button text type="danger" size="mini" @click.stop="handleDeleteSession(session.id)">
                   <el-icon>
                     <DeleteFilled />
                   </el-icon>
@@ -231,17 +328,22 @@ onMounted(() => {
                 :is-ai-message="true"></MarkDownRenderer>
               <p v-else-if="msg.content" v-html="formatMessageContent(msg.content)"></p>
             </div>
-            <!-- 两种情况：1. AI正在输出信息，显示正在思考中；2. AI已经发送消息，显示时间-->
-            <div class="message-time">{{ msg.senderType === 2 && isAiTying ? '正在思考中...' : msg.createdAt }}</div>
+            <!-- 两种情况：1. AI正在输出信息，显示正在输入；2. AI已经发送消息，显示时间-->
+            <div class="message-time">{{ msg.senderType === 2 && isAiTying ? '正在输入' : msg.createdAt }}</div>
           </div>
         </div>
       </div>
       <div class="chat-input">
         <div class="input-container">
           <el-input v-model="userMessage" placeholder="请输入内容" type="textarea" :rows="3" :disabled="isAiTying" clearable
-            :class="message - input" @keydown="handleDown"></el-input>
+            class="message-input" @keydown="handleDown"></el-input>
+          <div class="input-footer">
+            <span>按Enter发送，Shift+Enter换行</span>
+            <span>{{ userMessage.length }}/500</span>
+          </div>
         </div>
-        <el-button type="primary" class="send-btn" @click="sendMessage">
+        <el-button type="primary" class="send-btn" @click="sendMessage"
+          :disabled="userMessage.length > 500 || isAiTying">
           <el-icon>
             <Promotion />
           </el-icon>
@@ -755,6 +857,25 @@ onMounted(() => {
         }
 
         &.user-message {
+          // 用户消息靠右
+          flex-direction: row-reverse;
+
+          .message-content {
+            text-align: right;
+
+            .message-bubble {
+              // 用户气泡用主题色背景
+              background: linear-gradient(135deg, #fb923c 0%, #f59e0b 100%);
+              border: none;
+              box-shadow: 0 4px 16px rgba(251, 146, 60, 0.2);
+              color: #fff;
+            }
+
+            .message-time {
+              text-align: right;
+            }
+          }
+
           .message-avatar {
             background: linear-gradient(135deg, #6b7280, #4b5563);
             box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
