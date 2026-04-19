@@ -14,3 +14,16 @@ export const getSessionListAPI = (params) => {
     params,
   })
 }
+
+export const deleteSessionAPI = (sessionId) => {
+  return request({
+    url: `/psychological-chat/sessions/${sessionId}`,
+    method: 'delete',
+  })
+}
+
+export const getSessionDetailAPI = (sessionId) => {
+  return request({
+    url: `/psychological-chat/sessions/${sessionId}/messages`,
+  })
+}

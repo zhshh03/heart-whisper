@@ -1,20 +1,22 @@
 <script setup>
 import { onMounted, ref } from 'vue';
 import { ElMessage } from 'element-plus';
-import { createNewChatAPI, getSessionListAPI } from '@/apis/AiConsultation'
+import { createNewChatAPI, getSessionListAPI, deleteSessionAPI, getSessionDetailAPI } from '@/apis/AiConsultation'
 import { ChatRound, DeleteFilled } from '@element-plus/icons-vue';
+import MarkDownRenderer from '@/views/FrontBody/components/MarkDownRenderer.vue'
 // 引入图片
 const urlImage1 = new URL('@/assets/images/robot-fill.png', import.meta.url).href
 const urlImage2 = new URL('@/assets/images/like.png', import.meta.url).href
+const urlImage3 = new URL('@/assets/images/users.png', import.meta.url).href
 
 //获取当前用户信息
 const userInfo = ref({})
 userInfo.value = JSON.parse(localStorage.getItem('adminInfo'))
 
-// 消息列表
+// 消息列表（存储当前会话的消息记录）
 const messageList = ref([])
 
-//会话列表
+//会话列表（记录所有会话）
 const sessionList = ref([])
 //用户输入的消息
 const userMessage = ref('')
@@ -86,17 +88,34 @@ const startNewSession = async (message) => {
   } else {
     currentSession.value = sessionData
   }
+  //当创建新会话成功后，重新获取会话列表
   getSessionList()
 
 }
-
+//获取会话列表
 const getSessionList = async () => {
   const res = await getSessionListAPI({
     pageNum: 1,
     pageSize: 10
   })
   sessionList.value = res.data.records
+}
 
+//删除会话列表
+const handleDeleteSession = async (sessionId) => {
+  await deleteSessionAPI(sessionId)
+  getSessionList()
+  ElMessage.success('删除成功')
+}
+
+//点击会话获取会话详情
+const handleSessionClick = async (session) => {
+  const res = await getSessionDetailAPI(session.id)
+  messageList.value = res.data
+}
+//对用户输入的消息进行格式化
+const formatMessageContent = (content) => {
+  return content.replace(/\n/g, '<br>')
 }
 
 onMounted(() => {
@@ -187,6 +206,33 @@ onMounted(() => {
               <p>你好：{{ userInfo.nickname }}，我是宁度AI助手，很高兴为您服务。</p>
             </div>
             <div class="message-time">刚刚</div>
+          </div>
+        </div>
+        <div v-for="msg in messageList" :key="msg.id" class="message-item"
+          :class="msg.senderType === 1 ? 'user-message' : 'ai-message'">
+          <div class="message-avatar">
+            <el-image v-if="msg.senderType === 1" style="width: 18px; height: 18px;" :src="urlImage3"></el-image>
+            <el-image v-if="msg.senderType === 2" style="width: 18px; height: 18px;" :src="urlImage1"></el-image>
+          </div>
+          <div class="message-content">
+            <div class="message-bubble">
+              <!-- 如果消息是AI发送的，并且AI正在思考中，则显示正在思考中 -->
+              <div class="typing-indicator" v-if="msg.senderType === 2 && isAiTying && !msg.content">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+              </div>
+              <!-- 如果AI发送的消息是错误的，则显示错误信息 -->
+              <div class="error-message" v-else-if="msg.isError">
+                <p>{{ msg.content }}</p>
+              </div>
+              <!-- 如果AI发送的消息是正确的，则显示正确信息 -->
+              <MarkDownRenderer v-else-if="msg.senderType === 2 && !msg.isError" :content="msg.content"
+                :is-ai-message="true"></MarkDownRenderer>
+              <p v-else-if="msg.content" v-html="formatMessageContent(msg.content)"></p>
+            </div>
+            <!-- 两种情况：1. AI正在输出信息，显示正在思考中；2. AI已经发送消息，显示时间-->
+            <div class="message-time">{{ msg.senderType === 2 && isAiTying ? '正在思考中...' : msg.createdAt }}</div>
           </div>
         </div>
       </div>
