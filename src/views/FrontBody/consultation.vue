@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch, nextTick } from 'vue';
 import { ElMessage } from 'element-plus';
 import { createNewChatAPI, getSessionListAPI, deleteSessionAPI, getSessionDetailAPI, getSessionEmotionAPI } from '@/apis/AiConsultation'
 import { ChatRound, DeleteFilled } from '@element-plus/icons-vue';
@@ -218,6 +218,20 @@ const formatMessageContent = (content) => {
   return content.replace(/\n/g, '<br>')
 }
 
+// 聊天区域滚动到底部
+const chatMessagesRef = ref(null)
+const scrollToBottom = async () => {
+  await nextTick()
+  if (chatMessagesRef.value) {
+    chatMessagesRef.value.scrollTop = chatMessagesRef.value.scrollHeight
+  }
+}
+
+// 监听消息列表变化，自动滚到底部
+watch(messageList, () => {
+  scrollToBottom()
+}, { deep: true })
+
 //情绪花园数据
 const currentEmotion = ref({
   primaryEmotion: '中性',
@@ -388,7 +402,7 @@ onMounted(() => {
           </el-icon>
         </el-button>
       </div>
-      <div class="chat-messages">
+      <div class="chat-messages" ref="chatMessagesRef">
         <div class="message-item ai-message" v-if="messageList.length === 0">
           <div class="message-avatar">
             <el-image :src="urlImage1" style="width: 18px; height: 18px;"></el-image>
