@@ -27,3 +27,9 @@ export const getSessionDetailAPI = (sessionId) => {
     url: `/psychological-chat/sessions/${sessionId}/messages`,
   })
 }
+
+export const getSessionEmotionAPI = (sessionId) => {
+  return request({
+    url: `/psychological-chat/session/${sessionId}/emotion`,
+  })
+}

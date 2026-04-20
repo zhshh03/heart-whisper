@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, ref } from 'vue';
 import { ElMessage } from 'element-plus';
-import { createNewChatAPI, getSessionListAPI, deleteSessionAPI, getSessionDetailAPI } from '@/apis/AiConsultation'
+import { createNewChatAPI, getSessionListAPI, deleteSessionAPI, getSessionDetailAPI, getSessionEmotionAPI } from '@/apis/AiConsultation'
 import { ChatRound, DeleteFilled } from '@element-plus/icons-vue';
 import MarkDownRenderer from '@/views/FrontBody/components/MarkDownRenderer.vue'
 import { fetchEventSource } from '@microsoft/fetch-event-source';
@@ -32,6 +32,7 @@ const handleSessionClick = async (session) => {
     status: 'ACTIVE',
     sessionTitle: session.sessionTitle
   }
+  getSessionEmotion(session.id)
   currentSession.value = sessionData
 }
 //删除会话列表
@@ -177,6 +178,7 @@ const startAIResponse = (sessionId, userMessage) => {
       if (eventName === 'done') {
         isAiTying.value = false
         ctrl.abort()
+        getSessionEmotion(currentSession.value.sessionId)
         return
       }
       const payload = JSON.parse(raw)
@@ -192,6 +194,7 @@ const startAIResponse = (sessionId, userMessage) => {
       // 不抛出 err，避免 fetchEventSource 自动重试和未捕获异常
     },
     onclose: () => {
+      getSessionEmotion(currentSession.value.sessionId)
       // 连接关闭时确保恢复状态，防止 isAiTying 卡死
       if (isAiTying.value) {
         isAiTying.value = false
@@ -221,8 +224,19 @@ const currentEmotion = ref({
   emotionScore: 50,
   isNegative: false,
   riskLevel: 0,
-  suggestion: '情绪状态平稳'
+  suggestion: '情绪状态平稳',
+  improvementSuggestions: [],
+  isNegative: false,
+  riskDescription: ''
 })
+
+const getSessionEmotion = async (sessionId) => {
+  const id = sessionId.toString().startsWith('session_') ? sessionId : `session_${sessionId}`
+  const res = await getSessionEmotionAPI(id)
+  console.log(res)
+  currentEmotion.value = res.data
+
+}
 
 const getIntensityClass = (score) => {
   if (score >= 61) {
@@ -296,6 +310,22 @@ onMounted(() => {
             <div class="suggestion-content">
               <div class="suggestion-title">给你的小建议</div>
               <div class="suggestion-text">{{ currentEmotion.suggestion }}</div>
+            </div>
+          </div>
+          <div class="healing-actions" v-if="currentEmotion.improvementSuggestions.length > 0">
+            <div class="actions-title">治愈小行动</div>
+            <div class="actions-list">
+              <div v-for="action in currentEmotion.improvementSuggestions" :key="action" class="action-item">
+                <div class="action-icon">⭐</div>
+                <div class="action-text">{{ action }}</div>
+              </div>
+            </div>
+          </div>
+          <div class="risk-notice" v-if="currentEmotion.isNegative && currentEmotion.riskLevel > 1">
+            <div class="notice-icon"></div>
+            <div class="notice-content">
+              <div class="notice-title">温馨提示</div>
+              <div class="notice-text">{{ currentEmotion.riskDescription }}</div>
             </div>
           </div>
         </div>
