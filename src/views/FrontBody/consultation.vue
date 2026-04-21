@@ -1,73 +1,82 @@
 <script setup>
-import { onMounted, ref, watch, nextTick } from 'vue';
-import { ElMessage } from 'element-plus';
-import { createNewChatAPI, getSessionListAPI, deleteSessionAPI, getSessionDetailAPI, getSessionEmotionAPI } from '@/apis/AiConsultation'
-import { ChatRound, DeleteFilled } from '@element-plus/icons-vue';
-import MarkDownRenderer from '@/views/FrontBody/components/MarkDownRenderer.vue'
-import { fetchEventSource } from '@microsoft/fetch-event-source';
-// 引入图片
-const urlImage1 = new URL('@/assets/images/robot-fill.png', import.meta.url).href
-const urlImage2 = new URL('@/assets/images/like.png', import.meta.url).href
-const urlImage3 = new URL('@/assets/images/users.png', import.meta.url).href
+/**
+ * ============================================================
+ *  consultation.vue — AI 心理咨询聊天页面
+ * ============================================================
+ *  核心功能：
+ *  1. 左侧边栏：AI助手状态 + 情绪花园 + 会话历史列表
+ *  2. 右侧主区域：聊天消息区 + 输入框
+ *  3. 基于 SSE (Server-Sent Events) 的流式 AI 对话
+ *  4. 情绪分析：每次对话结束后自动获取情绪评分
+ * ============================================================
+ */
 
-//会话列表（记录所有会话）
-const sessionList = ref([])
-// 消息列表（存储当前会话的消息记录）
-const messageList = ref([])
-//更新会话列表
+// ==================== 依赖导入 ====================
+import { onMounted, ref, watch, nextTick } from 'vue'
+import { ElMessage } from 'element-plus'
+import { createNewChatAPI, getSessionListAPI, deleteSessionAPI, getSessionDetailAPI, getSessionEmotionAPI } from '@/apis/AiConsultation'
+import { ChatRound, DeleteFilled } from '@element-plus/icons-vue'
+import MarkDownRenderer from '@/views/FrontBody/components/MarkDownRenderer.vue'
+import { fetchEventSource } from '@microsoft/fetch-event-source'
+
+// ==================== 静态资源 ====================
+const urlImage1 = new URL('@/assets/images/robot-fill.png', import.meta.url).href  // AI头像
+const urlImage2 = new URL('@/assets/images/like.png', import.meta.url).href       // 聊天头部图标
+const urlImage3 = new URL('@/assets/images/users.png', import.meta.url).href      // 用户头像
+
+// ==================== 核心状态 ====================
+const sessionList = ref([])    // 所有历史会话列表
+const messageList = ref([])    // 当前会话的消息记录
+const currentSession = ref(null)  // 当前会话对象，包含 sessionId / status / sessionTitle
+const userMessage = ref('')    // 用户正在输入的消息
+const isAiTying = ref(false)   // AI 是否正在回复中（防止重复发送）
+
+// ==================== 用户信息 ====================
+const userInfo = ref({})
+userInfo.value = JSON.parse(localStorage.getItem('adminInfo'))
+
+// ==================== 会话列表相关 ====================
+
+/** 获取会话列表（从后端拉取，用于左侧展示） */
 const getSessionList = async () => {
-  const res = await getSessionListAPI({
-    pageNum: 1,
-    pageSize: 10
-  })
+  const res = await getSessionListAPI({ pageNum: 1, pageSize: 10 })
   sessionList.value = res.data.records
 }
-//点击会话获取会话详情
+
+/** 点击某个历史会话 → 加载该会话的消息记录 + 情绪数据 */
 const handleSessionClick = async (session) => {
   const res = await getSessionDetailAPI(session.id)
   messageList.value = res.data
-  //更新当前会话对象数据
-  const sessionData = {
+  // 切换当前会话为 ACTIVE 状态
+  currentSession.value = {
     sessionId: "session_" + session.id,
     status: 'ACTIVE',
     sessionTitle: session.sessionTitle
   }
+  // 同步获取该会话的情绪分析
   getSessionEmotion(session.id)
-  currentSession.value = sessionData
 }
-//删除会话列表
+
+/** 删除某个会话 → 刷新列表 */
 const handleDeleteSession = async (sessionId) => {
   await deleteSessionAPI(sessionId)
   getSessionList()
   ElMessage.success('删除成功')
 }
 
-
-//当前会话对象 
-const currentSession = ref(null)
-//创建新会话（首次加载页面自动创建）
+/** 创建新会话 → 将当前会话设为临时状态（TEMP），清空消息展示欢迎语 */
 const createNewChat = async () => {
-  const newSession = {
+  currentSession.value = {
     sessionId: `temp_${Date.now()}`,
-    status: 'TEMP',
+    status: 'TEMP',       // 临时状态，第一条消息发出后才真正创建
     sessionTitle: '新对话'
   }
-  currentSession.value = newSession
-  // 清空消息列表，展示欢迎语
   messageList.value = []
 }
 
-//获取当前用户信息
-const userInfo = ref({})
-userInfo.value = JSON.parse(localStorage.getItem('adminInfo'))
+// ==================== 消息发送相关 ====================
 
-//用户输入的消息
-const userMessage = ref('')
-
-//是否正在与AI对话
-const isAiTying = ref(false)
-
-//发送消息(键盘操作)
+/** 键盘事件：Enter 发送，Shift+Enter 换行 */
 const handleDown = async (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault()
@@ -75,26 +84,30 @@ const handleDown = async (e) => {
   }
 }
 
-//发送消息(点击按钮)
+/**
+ * 发送消息入口
+ * - 空消息 → 忽略
+ * - AI 正在回复 → 提示等待
+ * - 当前是 TEMP 会话 → 调用 startNewSession（首次对话需要先创建会话）
+ * - 当前是 ACTIVE 会话 → 直接追加消息 + 请求 AI 回复
+ */
 const sendMessage = async () => {
-  // 如果用户输入为空，则不发送消息
   if (userMessage.value.trim() === '') return
-  //如果正在与AI对话，则不发送消息
   if (isAiTying.value) {
     ElMessage.error('AI助手正在思考中，请稍后')
     return
   }
-  //将用户输入的消息赋值给message，并清空用户输入的消息
   const message = userMessage.value.trim()
   userMessage.value = ''
-  //如果当前会话状态为TEMP，则开始新会话
+
   if (currentSession.value.status === 'TEMP') {
+    // 第一次发消息 → 需要先在后端创建会话
     startNewSession(message)
   } else {
-    // ACTIVE 会话中继续发送消息
+    // 已有会话 → 直接追加用户消息，请求 AI 回复
     messageList.value.push({
       id: Date.now(),
-      senderType: 1,
+      senderType: 1,         // 1 = 用户
       content: message,
       createdAt: new Date().toLocaleString()
     })
@@ -102,56 +115,64 @@ const sendMessage = async () => {
   }
 }
 
-//开始新会话
+/**
+ * 首次发消息 → 调用创建会话 API
+ * 创建成功后：更新 currentSession → 刷新列表 → 追加用户消息 → 请求 AI 回复
+ */
 const startNewSession = async (message) => {
-  //设置会话参数
-  const sessionParams = {
-    initialMessage: message
-  }
-  //如果当前会话标题为新对话，则设置会话标题为当前时间,否则不变
-  if (currentSession.value.sessionTitle === '新对话') {
-    sessionParams.sessionTitle = `宁度AI助手 - ${new Date().toLocaleString()}`
-  } else {
-    sessionParams.sessionTitle = currentSession.value.sessionTitle
-  }
-  //发送创建新会话请求
+  const sessionParams = { initialMessage: message }
+  // 如果标题还是默认"新对话"，则用时间戳命名
+  sessionParams.sessionTitle = `宁度AI助手 - ${new Date().toLocaleString()}`
+
   const res = await createNewChatAPI(sessionParams)
-  //设置当前会话id、状态、标题
   const sessionData = {
     sessionId: res.data.sessionId,
     status: res.data.status,
     sessionTitle: sessionParams.sessionTitle
   }
-  //如果当前会话状态为TEMP，则更新当前会话
-  if (currentSession.value && currentSession.value.status === 'TEMP') {
-    Object.assign(currentSession.value, sessionData)
-  } else {
-    currentSession.value = sessionData
-  }
-  //当创建新会话成功后，重新获取会话列表
-  getSessionList()
 
+  // 将临时会话更新为真实会话
+  currentSession.value = sessionData
+
+  getSessionList()  // 刷新左侧会话列表
+
+  // 追加用户消息到聊天区
   messageList.value.push({
     id: Date.now(),
     senderType: 1,
     content: message,
     createdAt: new Date().toLocaleString()
   })
-  //开始流式会话
+
+  // 请求 AI 流式回复
   startAIResponse(currentSession.value.sessionId, message)
 }
 
+// ==================== AI 流式回复（SSE） ====================
+
+/**
+ * 通过 SSE (Server-Sent Events) 获取 AI 的流式回复
+ * 流程：
+ *  1. 先在 messageList 末尾添加一条空的 AI 消息占位
+ *  2. 建立 SSE 连接，逐步将 AI 回复内容拼接到占位消息上
+ *  3. 收到 'done' 事件 → 回复完成 → 获取情绪分析
+ *  4. 出错 → 显示错误提示
+ */
 const startAIResponse = (sessionId, userMessage) => {
   isAiTying.value = true
+
+  // 添加 AI 消息占位（content 为空，等 SSE 数据逐步填充）
   const aiMeessage = {
     id: `ai_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-    senderType: 2,
+    senderType: 2,         // 2 = AI
     content: '',
     createdAt: new Date().toLocaleString()
   }
   messageList.value.push(aiMeessage)
+
   const ctrl = new AbortController()
   const token = localStorage.getItem('token')
+
   fetchEventSource('/api/psychological-chat/stream', {
     method: 'POST',
     headers: {
@@ -159,28 +180,33 @@ const startAIResponse = (sessionId, userMessage) => {
       'Accept': 'text/event-stream',
       ...(token ? { token } : {})
     },
-    body: JSON.stringify({
-      sessionId: sessionId,
-      userMessage: userMessage
-    }),
+    body: JSON.stringify({ sessionId, userMessage }),
     signal: ctrl.signal,
+
+    // SSE 连接打开时：验证响应类型
     onopen: (response) => {
       if (response.headers.get('Content-Type') !== 'text/event-stream') {
         ElMessage.error('连接失败')
       }
     },
+
+    // 收到 SSE 消息时：逐步拼接 AI 回复内容
     onmessage: (event) => {
       const raw = event.data.trim()
       if (!raw) return
       const eventName = event.event
 
       const aiMessage = messageList.value[messageList.value.length - 1]
+
+      // 收到 'done' 事件 → AI 回复结束
       if (eventName === 'done') {
         isAiTying.value = false
         ctrl.abort()
         getSessionEmotion(currentSession.value.sessionId)
         return
       }
+
+      // 正常数据 → 将 content 拼接到 AI 消息上（实现打字机效果）
       const payload = JSON.parse(raw)
       const ok = String(payload.code) === '200'
       if (ok && payload.data && payload.data.content) {
@@ -189,13 +215,15 @@ const startAIResponse = (sessionId, userMessage) => {
         handleError(payload.msg || 'AI助手出错了')
       }
     },
+
+    // SSE 连接出错
     onerror: () => {
       handleError()
-      // 不抛出 err，避免 fetchEventSource 自动重试和未捕获异常
     },
+
+    // SSE 连接关闭 → 确保状态恢复，防止 isAiTying 卡死
     onclose: () => {
       getSessionEmotion(currentSession.value.sessionId)
-      // 连接关闭时确保恢复状态，防止 isAiTying 卡死
       if (isAiTying.value) {
         isAiTying.value = false
       }
@@ -203,7 +231,7 @@ const startAIResponse = (sessionId, userMessage) => {
   })
 }
 
-//处理错误信息
+/** 错误处理：将最后一条 AI 消息改为错误提示，恢复状态 */
 const handleError = () => {
   const aiMessage = messageList.value[messageList.value.length - 1]
   if (aiMessage) {
@@ -213,13 +241,16 @@ const handleError = () => {
   ElMessage.error('AI助手出错了')
 }
 
-//对用户输入的消息进行格式化
+// ==================== 消息格式化 & 自动滚动 ====================
+
+/** 将换行符 \n 转为 <br>，用于在 HTML 中展示用户消息 */
 const formatMessageContent = (content) => {
   return content.replace(/\n/g, '<br>')
 }
 
-// 聊天区域滚动到底部
 const chatMessagesRef = ref(null)
+
+/** 聊天区域滚动到底部（等 DOM 更新后执行） */
 const scrollToBottom = async () => {
   await nextTick()
   if (chatMessagesRef.value) {
@@ -227,12 +258,14 @@ const scrollToBottom = async () => {
   }
 }
 
-// 监听消息列表变化，自动滚到底部
+// 监听 messageList 变化，自动滚到底部
 watch(messageList, () => {
   scrollToBottom()
 }, { deep: true })
 
-//情绪花园数据
+// ==================== 情绪花园（情绪分析） ====================
+
+/** 当前会话的情绪分析数据 */
 const currentEmotion = ref({
   primaryEmotion: '中性',
   emotionScore: 50,
@@ -240,53 +273,43 @@ const currentEmotion = ref({
   riskLevel: 0,
   suggestion: '情绪状态平稳',
   improvementSuggestions: [],
-  isNegative: false,
   riskDescription: ''
 })
 
+/** 获取当前会话的情绪分析（对话结束后调用） */
 const getSessionEmotion = async (sessionId) => {
   const id = sessionId.toString().startsWith('session_') ? sessionId : `session_${sessionId}`
   const res = await getSessionEmotionAPI(id)
-  console.log(res)
   currentEmotion.value = res.data
-
 }
 
+/** 根据情绪分数返回强度等级（1-3），用于控制圆点高亮数量 */
 const getIntensityClass = (score) => {
-  if (score >= 61) {
-    return 3
-  } else if (score >= 31) {
-    return 2
-  } else {
-    return 1
-  }
+  if (score >= 61) return 3   // 高强度
+  if (score >= 31) return 2   // 中强度
+  return 1                     // 低强度
 }
 
+/** 根据风险等级返回文字描述 */
 const getRiskText = (level) => {
-  switch (level) {
-    case 0:
-      return '正常'
-    case 1:
-      return '关注'
-    case 2:
-      return '预警'
-    case 3:
-      return '危机'
-    default:
-      return '正常'
-
-  }
+  const map = { 0: '正常', 1: '关注', 2: '预警', 3: '危机' }
+  return map[level] || '正常'
 }
+
+// ==================== 生命周期 ====================
+
 onMounted(() => {
-  createNewChat()
-  getSessionList()
+  createNewChat()    // 页面加载时自动创建一个临时新会话
+  getSessionList()   // 加载历史会话列表
 })
 </script>
 
 
 <template>
   <div class="consultation-container">
+    <!-- ==================== 左侧边栏 ==================== -->
     <div class="sidebar">
+      <!-- 1. AI 助手状态卡片（头像 + 在线状态） -->
       <div class="ai-assistant-info">
         <div class="breathing-circle">
           <el-image :src="urlImage1" alt="AI助手" class="assistant-icon" style="width: 25px; height: 25px;"></el-image>
@@ -297,13 +320,15 @@ onMounted(() => {
           在线服务中
         </div>
       </div>
+
+      <!-- 2. 情绪花园卡片（情绪分数 + 建议 + 治愈行动 + 风险提示） -->
       <div class="emotion-garden">
         <div class="garden-header">
           <div class="garden-title">情绪花园</div>
         </div>
         <div class="emotion-info">
-          <div class="emotion-name">中性</div>
-          <div class="emotion-score">50</div>
+          <div class="emotion-name">{{ currentEmotion.primaryEmotion }}</div>
+          <div class="emotion-score">{{ currentEmotion.emotionScore || 50 }}</div>
         </div>
         <div class="warm-tips">
           <div class="emotion-status-text">
@@ -344,6 +369,8 @@ onMounted(() => {
           </div>
         </div>
       </div>
+
+      <!-- 3. 会话历史列表（点击切换会话，可删除） -->
       <div class="session-history">
         <h4 class="section-title">会话列表</h4>
         <div class="session-list">
@@ -385,7 +412,10 @@ onMounted(() => {
         </div>
       </div>
     </div>
+
+    <!-- ==================== 右侧聊天主区域 ==================== -->
     <div class="chat-main">
+      <!-- 聊天顶部栏（AI 名称 + 新建会话按钮） -->
       <div class="chat-header">
         <div class="header-left">
           <div class="chat-avatar">
@@ -402,7 +432,9 @@ onMounted(() => {
           </el-icon>
         </el-button>
       </div>
+      <!-- 聊天消息区 -->
       <div class="chat-messages" ref="chatMessagesRef">
+        <!-- 无消息时显示欢迎语 -->
         <div class="message-item ai-message" v-if="messageList.length === 0">
           <div class="message-avatar">
             <el-image :src="urlImage1" style="width: 18px; height: 18px;"></el-image>
@@ -414,6 +446,7 @@ onMounted(() => {
             <div class="message-time">刚刚</div>
           </div>
         </div>
+        <!-- 消息列表：senderType=1 用户消息（右侧），senderType=2 AI消息（左侧） -->
         <div v-for="msg in messageList" :key="msg.id" class="message-item"
           :class="msg.senderType === 1 ? 'user-message' : 'ai-message'">
           <div class="message-avatar">
@@ -422,26 +455,28 @@ onMounted(() => {
           </div>
           <div class="message-content">
             <div class="message-bubble">
-              <!-- 如果消息是AI发送的，并且AI正在思考中，则显示正在思考中 -->
+              <!-- AI 正在思考：显示三个跳动圆点 -->
               <div class="typing-indicator" v-if="msg.senderType === 2 && isAiTying && !msg.content">
                 <div class="typing-dot"></div>
                 <div class="typing-dot"></div>
                 <div class="typing-dot"></div>
               </div>
-              <!-- 如果AI发送的消息是错误的，则显示错误信息 -->
+              <!-- AI 回复出错 -->
               <div class="error-message" v-else-if="msg.isError">
                 <p>{{ msg.content }}</p>
               </div>
-              <!-- 如果AI发送的消息是正确的，则显示正确信息 -->
+              <!-- AI 正常回复：使用 Markdown 渲染 -->
               <MarkDownRenderer v-else-if="msg.senderType === 2 && !msg.isError" :content="msg.content"
                 :is-ai-message="true"></MarkDownRenderer>
+              <!-- 用户消息：纯文本，换行符转 <br> -->
               <p v-else-if="msg.content" v-html="formatMessageContent(msg.content)"></p>
             </div>
-            <!-- 两种情况：1. AI正在输出信息，显示正在输入；2. AI已经发送消息，显示时间-->
+            <!-- AI 正在输入时显示"正在输入"，否则显示时间 -->
             <div class="message-time">{{ msg.senderType === 2 && isAiTying ? '正在输入' : msg.createdAt }}</div>
           </div>
         </div>
       </div>
+      <!-- 底部输入区 -->
       <div class="chat-input">
         <div class="input-container">
           <el-input v-model="userMessage" placeholder="请输入内容" type="textarea" :rows="3" :disabled="isAiTying" clearable
