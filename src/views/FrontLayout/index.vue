@@ -2,16 +2,18 @@
 import { onMounted, ref } from 'vue';
 import { loginOutAPI } from '@/apis/userInfo'
 import { useRouter } from 'vue-router'
+import { useAdminInfoStore } from '@/stores/Admin/adminInfo';
 
 const router = useRouter()
+
+const adominInfoStore = useAdminInfoStore()
 
 const isLogin = ref(false)
 const urlImg = new URL('@/assets/images/机器人.png', import.meta.url).href
 
 const logout = async () => {
   await loginOutAPI()
-  localStorage.removeItem('token')
-  localStorage.removeItem('adminInfo')
+  adominInfoStore.clearAdminInfo()
   router.push('/auth/login')
 }
 
